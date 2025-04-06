@@ -24,4 +24,4 @@ jobs:
 
     - name: Run scraper
       run: |
-        node scraper.js
+        node scraper.mjs
