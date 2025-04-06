@@ -4,11 +4,14 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 puppeteer.use(StealthPlugin());
 
 async function scrapeData() {
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath: '/usr/bin/chromium-browser',  // Render için doğru yol
+    args: ['--no-sandbox', '--disable-setuid-sandbox']  // Güvenlik için ek argümanlar
+  });
+  
   const page = await browser.newPage();
-
   await page.goto('https://www.akakce.com/j/gl/?t=pr&i=321437397&s=0&b=315');
-
   await page.waitForSelector('body > ul > li');
 
   const products = await page.$$eval('body > ul > li', (items) => {
@@ -22,12 +25,8 @@ async function scrapeData() {
 
   await browser.close();
 
-  // JSON formatında çıktı ver
   console.log(JSON.stringify(products));
-
   return products;
 }
 
-scrapeData().then(data => {
-  // Burada, GitHub Actions'ı kullanarak API endpoint'e veri gönderme işlemi yapılabilir.
-}).catch(console.error);
+scrapeData().catch(console.error);
