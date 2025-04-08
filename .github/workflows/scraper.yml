@@ -20,11 +20,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        npm install
-
-    - name: Ensure Chromium is installed
-      run: |
-        node node_modules/puppeteer/install.js
+        PUPPETEER_PRODUCT=chrome npm install
 
     - name: Run scraper
       run: |
