@@ -9,7 +9,7 @@ puppeteer.use(StealthPlugin());
 async function scrapeData() {
   const browser = await puppeteer.launch({
     headless: false, // Tarayıcıyı başlatırken arayüzsüz (headless) olarak başlatır
-    args: [        '--no-sandbox', // Avoid sandbox issues in environments like CI
+    args: ['--no-sandbox', // Avoid sandbox issues in environments like CI
       '--disable-setuid-sandbox', // Disable the setuid sandbox
       '--disable-gpu', // Disables GPU hardware acceleration (useful in CI environments)
       '--remote-debugging-port=9222', // Optional: Enables remote debugging
