@@ -11,22 +11,23 @@ jobs:
 
     steps:
     - name: Check out the code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4  # Updated to latest version
 
     - name: Set up Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v4  # Updated to latest version
       with:
         node-version: '22'
+        cache: 'npm'  # Add caching for faster installs
+
+    - name: Install Chrome
+      uses: browser-actions/setup-chrome@latest  # Official Chrome setup
+      with:
+        chrome-version: stable  # Explicitly use stable version
 
     - name: Install dependencies
-      run: |
-        npm install
-
-    - name: Install Google Chrome
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
+      run: npm ci  # Clean install for CI reliability
 
     - name: Run scraper
-      run: |
-        node scraper.mjs
+      run: node scraper.mjs
+      env:
+        NODE_OPTIONS: --unhandled-rejections=strict  # Better error handling
