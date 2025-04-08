@@ -38,13 +38,13 @@ async function scrapeData() {
 
     // Navigate to the page
     await page.goto('https://www.akakce.com/j/gl/?t=pr&i=321437397&s=0&b=315', { waitUntil: 'networkidle2', timeout: 60000 });
-
+    await page.screenshot({ path: 'page_screenshot.png', fullPage: true });
+    console.log('Screenshot taken and saved as page_screenshot.png');
     // Wait for the page to load the relevant elements
     await page.waitForSelector('body > ul > li', { timeout: 60000 });
 
     // Take a screenshot of the page
-    await page.screenshot({ path: 'page_screenshot.png', fullPage: true });
-    console.log('Screenshot taken and saved as page_screenshot.png');
+    
 
     // Simulate random mouse movements to avoid bot detection
     await page.mouse.move(
