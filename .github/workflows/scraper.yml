@@ -22,12 +22,6 @@ jobs:
       run: |
         npm install
 
-    - name: Install Chromium manually
-      run: |
-        npx puppeteer browsers install chrome
-
     - name: Run scraper
-      env:
-        PUPPETEER_EXECUTABLE_PATH: ~/.cache/puppeteer/chrome/linux-135.0.7049.42/chrome-linux64/chrome
       run: |
         node scraper.mjs
