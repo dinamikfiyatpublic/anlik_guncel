@@ -32,58 +32,65 @@ async function scrapeData() {
     });
   });
 
-  await page.goto('https://www.akakce.com/j/gl/?t=pr&i=321437397&s=0&b=315');
-  await page.waitForSelector('body > ul > li');
+  await page.goto('https://www.akakce.com/j/gl/?t=pr&i=321437397&s=0&b=315', { waitUntil: 'domcontentloaded' });
 
-  // Screenshot directory check and create (absolute path)
+  // Ensure screenshots directory exists in the repo
   const screenshotDir = path.join(__dirname, 'screenshots');
   if (!fs.existsSync(screenshotDir)) {
     fs.mkdirSync(screenshotDir, { recursive: true });
   }
 
-  // Screenshot file path
   const screenshotPath = path.join(screenshotDir, 'page_screenshot.png');
+  
+  try {
+    // Wait for the selector with an increased timeout
+    await page.waitForSelector('body > ul > li', { timeout: 60000 }); // 60 seconds timeout
 
-  // Screenshot the page
-  await page.screenshot({ path: screenshotPath });
+    // Screenshot the page
+    await page.screenshot({ path: screenshotPath });
 
-  // Rastgele mouse hareketleri
-  await page.mouse.move(
-    Math.floor(Math.random() * 500),
-    Math.floor(Math.random() * 500),
-    { steps: 10 }
-  );
+    // Rastgele mouse hareketleri
+    await page.mouse.move(
+      Math.floor(Math.random() * 500),
+      Math.floor(Math.random() * 500),
+      { steps: 10 }
+    );
 
-  // Sayfa scroll simülasyonu
-  await page.evaluate(async () => {
-    await new Promise(resolve => {
-      let totalHeight = 0;
-      const distance = 100;
-      const timer = setInterval(() => {
-        const scrollHeight = document.body.scrollHeight;
-        window.scrollBy(0, distance);
-        totalHeight += distance;
-        if (totalHeight >= scrollHeight) {
-          clearInterval(timer);
-          resolve();
-        }
-      }, 100);
+    // Sayfa scroll simülasyonu
+    await page.evaluate(async () => {
+      await new Promise(resolve => {
+        let totalHeight = 0;
+        const distance = 100;
+        const timer = setInterval(() => {
+          const scrollHeight = document.body.scrollHeight;
+          window.scrollBy(0, distance);
+          totalHeight += distance;
+          if (totalHeight >= scrollHeight) {
+            clearInterval(timer);
+            resolve();
+          }
+        }, 100);
+      });
     });
-  });
 
-  const products = await page.$$eval('body > ul > li', (items) => {
-    return items.map((item) => {
-      const fiyat = item.querySelector('div > span.pb_v8 > span')?.innerText.trim() || 'Fiyat yok';
-      const kargo = item.querySelector('div > span.pb_v8 > em')?.innerText.trim() || 'Kargo yok';
-      const satici = item.querySelector('div > span.v_v8')?.innerText.trim() || 'Satıcı yok';
-      return { fiyat, kargo, satici };
+    // Extract products
+    const products = await page.$$eval('body > ul > li', (items) => {
+      return items.map((item) => {
+        const fiyat = item.querySelector('div > span.pb_v8 > span')?.innerText.trim() || 'Fiyat yok';
+        const kargo = item.querySelector('div > span.pb_v8 > em')?.innerText.trim() || 'Kargo yok';
+        const satici = item.querySelector('div > span.v_v8')?.innerText.trim() || 'Satıcı yok';
+        return { fiyat, kargo, satici };
+      });
     });
-  });
 
-  await browser.close();
+    console.log(JSON.stringify(products));
+    return products;
 
-  console.log(JSON.stringify(products));
-  return products;
+  } catch (error) {
+    console.error('Error during scraping:', error);
+  } finally {
+    await browser.close();
+  }
 }
 
 scrapeData().catch(console.error);
