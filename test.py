@@ -5,7 +5,7 @@ import requests
 def send_request():
     host = "api.scrapeless.com"
     url = f"https://{host}/api/v1/unlocker/request"
-    token = "sk_shxQZGrEI6hmA2Fe5tzRxJzZ1wC4nf3De9j1MF12k2FIwQqFesriZOSnyg100GbK"
+    token = "xxxxxxxxxxxx"
 
     headers = {
         "x-api-token": token
