@@ -6,9 +6,12 @@ dotenv.config();
 
 const { Client } = pkg;
 
-const password = process.env.PG_PASSWORD;
-const encodedPassword = encodeURIComponent(password);
-const connectionString = process.env.PG_CONNECTION_STRING.replace('${PG_PASSWORD}', encodedPassword);
+const rawPassword = process.env.PG_PASSWORD;
+const encodedPassword = encodeURIComponent(rawPassword);
+const base = process.env.PG_CONNECTION_STRING_BASE;
+
+const connectionString = base.replace('@', `${encodedPassword}@`);
+
 const viewName = process.env.PG_VIEW_NAME;
 
 let child = null;

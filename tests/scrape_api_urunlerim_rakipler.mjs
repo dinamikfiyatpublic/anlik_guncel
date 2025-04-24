@@ -1,14 +1,20 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { createClient } from '@supabase/supabase-js';
+import path from 'path';
 import dotenv from 'dotenv';
-dotenv.config();
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Bir üst dizindeki .env dosyasını yükle
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 puppeteer.use(StealthPlugin());
 
-const supabaseUrl = process.env.pg_supabaseUrl;
-const supabaseKey = process.env.pg_supabaseKey;  
+const supabaseUrl = process.env.PG_SUPABASEURL;
+const supabaseKey = process.env.PG_SUPABASEKEY;  
 const viewName = process.env.PG_VIEW_NAME;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -37,7 +43,10 @@ const additionalData = {
 };
 
 const scrapeAkakce = async (urun_kodu, additionalData) => {
-  const url = `https://www.akakce.com/j/gl/?t=pr&i=${urun_kodu}&s=0&b=315`;
+  //const url = `https://api.scrapingant.com/v2/general?url=https://www.akakce.com/j/gl/?t=pr&i=${urun_kodu}&s=0&b=315&x-api-key=6c2df9d004604dc2a4320481344c0485&browser=false`;
+  
+  const url = `https://api.scrapingant.com/v2/general?url=https%3A%2F%2Fwww.akakce.com%2Fj%2Fgl%2F%3Ft%3Dpr%26i%3D${urun_kodu}%26s%3D0%26b%3D315&x-api-key=6c2df9d004604dc2a4320481344c0485&browser=false`;
+  
   let browser;
 
   try {
@@ -59,7 +68,7 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
     );
 
     try {
-      await page.goto(url, { waitUntil: 'load', timeout: 90000 });
+      await page.goto(url, { waitUntil: 'networkidle2', timeout: 90000 });
     } catch (error) {
       console.error(`Alt Süreç (${urun_kodu}): Sayfa yüklenemedi:`, error.message);
       process.send({
@@ -70,7 +79,7 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
       return null; // Sayfa yüklenemediği için null döndürüyoruz
     }
 
-    await page.waitForSelector('body > ul > li', { timeout: 10000 });
+    await page.waitForSelector('body > ul > li', { timeout: 30000 });
 
     const products = await page.$$eval(
       'body > ul > li',

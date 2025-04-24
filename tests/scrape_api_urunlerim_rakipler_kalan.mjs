@@ -2,9 +2,15 @@ import { fork } from 'child_process';
 import pkg from 'pg';
 import pLimit from 'p-limit';
 import fs from 'fs';
+import path from 'path';
 import dotenv from 'dotenv';
-dotenv.config();
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Bir üst dizindeki .env dosyasını yükle
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const { Client } = pkg;
 const globalStartTime = Date.now();
 
@@ -23,12 +29,15 @@ process.on('exit', () => {
 process.on('SIGINT', () => process.exit()); // Ctrl+C yakalama
 process.on('SIGTERM', () => process.exit());
 
-const password = process.env.PG_PASSWORD;
-const encodedPassword = encodeURIComponent(password);
-const connectionString = process.env.PG_CONNECTION_STRING.replace('${PG_PASSWORD}', encodedPassword);
+const rawPassword = process.env.PG_PASSWORD;
+const encodedPassword = encodeURIComponent(rawPassword);
+const base = process.env.PG_CONNECTION_STRING_BASE;
+
+const connectionString = base.replace('@', `${encodedPassword}@`);
+
 const viewName = process.env.PG_VIEW_NAME;
 
-const limit = pLimit(25);
+const limit = pLimit(10);
 const logFile = './sayfa_sureleri_log.txt'; // Süre log dosyası
 
 async function fetchLinksUntilEmpty() {
@@ -52,7 +61,7 @@ async function fetchLinksUntilEmpty() {
                     link, ana_kat, alt_kat1, alt_kat2, marka, urun_kodu, timestamp, sira, p_adi,checker
                 FROM ${viewName}
                 where checker = true
-                LIMIT 25;
+                LIMIT 10;
             `);
 
             if (res.rows.length === 0) {
