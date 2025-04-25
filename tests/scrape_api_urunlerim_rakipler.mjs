@@ -43,16 +43,21 @@ const additionalData = {
 };
 
 const scrapeAkakce = async (urun_kodu, additionalData) => {
-  //const url = `https://api.scrapingant.com/v2/general?url=https://www.akakce.com/j/gl/?t=pr&i=${urun_kodu}&s=0&b=315&x-api-key=6c2df9d004604dc2a4320481344c0485&browser=false`;
-  
-  const url = `https://api.scrapingant.com/v2/general?url=https%3A%2F%2Fwww.akakce.com%2Fj%2Fgl%2F%3Ft%3Dpr%26i%3D${urun_kodu}%26s%3D0%26b%3D315&x-api-key=6c2df9d004604dc2a4320481344c0485&browser=false`;
-  
+  const url = `https://www.akakce.com/j/gl/?t=pr&i=100080686&s=0&b=315`;
+
+  const proxyHost = 'proxy.toolip.io';
+  const proxyPort = process.env.PG_PG_PROXYPORT;
+  const proxyUsername = process.env.PG_PROXYUSERNAME;
+  const proxyPassword = process.env.PG_PROXYPASSWORD;
+  const proxyUrl = `${proxyHost}:${proxyPort}`;
+
   let browser;
 
   try {
     browser = await puppeteer.launch({
-      headless: 'new',
+      headless: true, 
       args: [
+        `--proxy-server=http=${proxyUrl}`,
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
@@ -60,12 +65,17 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
         '--disable-site-isolation-trials',
         '--no-zygote',
       ],
+      defaultViewport: null
     });
 
     const page = await browser.newPage();
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
     );
+    await page.authenticate({
+      username: proxyUsername,
+      password: proxyPassword
+    });
 
     try {
       await page.goto(url, { waitUntil: 'networkidle2', timeout: 90000 });
@@ -123,6 +133,7 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
     if (browser) await browser.close();
   }
 };
+
 
 const run = async () => {
   const scrapedProducts = await scrapeAkakce(urun_kodu, additionalData);

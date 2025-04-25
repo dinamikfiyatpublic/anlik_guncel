@@ -1,0 +1,32 @@
+name: Scraping Task
+
+on:
+  workflow_dispatch: # Manuel tetikleme
+  push:
+    branches:
+      - main
+
+jobs:
+  scraping:
+    runs-on: ubuntu-latest # İşlem Ubuntu üzerinde çalışacak
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2 # Repository'yi çeker
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16' # Node.js versiyonu
+
+    - name: Install dependencies
+      run: |
+        npm install puppeteer-extra puppeteer-extra-plugin-stealth dotenv
+
+    - name: Run scraping script
+      run: |
+        xvfb-run --server-args="-screen 0, 1280x1024x24" node toolip_proxy.mjs
+      env:
+        PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
+        PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}
+        PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}

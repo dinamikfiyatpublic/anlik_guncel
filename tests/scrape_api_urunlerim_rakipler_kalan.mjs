@@ -37,7 +37,7 @@ const connectionString = base.replace('@', `${encodedPassword}@`);
 
 const viewName = process.env.PG_VIEW_NAME;
 
-const limit = pLimit(10);
+const limit = pLimit(1);
 const logFile = './sayfa_sureleri_log.txt'; // Süre log dosyası
 
 async function fetchLinksUntilEmpty() {
@@ -61,7 +61,7 @@ async function fetchLinksUntilEmpty() {
                     link, ana_kat, alt_kat1, alt_kat2, marka, urun_kodu, timestamp, sira, p_adi,checker
                 FROM ${viewName}
                 where checker = true
-                LIMIT 10;
+                LIMIT 1;
             `);
 
             if (res.rows.length === 0) {
