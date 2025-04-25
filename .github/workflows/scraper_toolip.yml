@@ -23,9 +23,9 @@ jobs:
       run: |
         npm install puppeteer-extra puppeteer-extra-plugin-stealth dotenv
 
-    - name: Change directory and run scraping script
+    - name: Run scraping script
       run: |
-        cd /workspaces/anlik_guncel/tests
+        cd tests
         xvfb-run --server-args="-screen 0, 1280x1024x24" node toolip_proxy.mjs
       env:
         PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
