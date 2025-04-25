@@ -22,7 +22,7 @@ jobs:
         run: |
           npm install puppeteer-core
 
-      - name: Install Chrome dependencies
+      - name: Install Chrome
         run: |
           sudo apt-get update
           sudo apt-get install -y wget curl gnupg
