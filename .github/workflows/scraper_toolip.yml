@@ -25,7 +25,7 @@ jobs:
 
     - name: Run scraping script
       run: |
-        xvfb-run --server-args="-screen 0, 1280x1024x24" node toolip_proxy.mjs
+        xvfb-run --server-args="-screen 0, 1280x1024x24" node /workspaces/anlik_guncel/tests/toolip_proxy.mjs
       env:
         PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
         PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}
