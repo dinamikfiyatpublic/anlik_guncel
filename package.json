@@ -15,6 +15,7 @@
     "axios": "^1.8.4",
     "cheerio": "^1.0.0",
     "dotenv": "^16.5.0",
+    "https-proxy-agent": "^7.0.6",
     "p-limit": "^6.2.0",
     "pg": "^8.15.5",
     "puppeteer": "^24.7.2",
@@ -23,6 +24,7 @@
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "puppeteer-extra-plugin-user-data-dir": "^2.4.1",
     "rimraf": "^6.0.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "xvfb": "^0.4.0"
   }
 }
