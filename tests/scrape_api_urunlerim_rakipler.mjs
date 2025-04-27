@@ -153,7 +153,7 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
           if (!formattedFiyat) return null;
 
           const kargo = item.querySelector('span.pb_v8 > em')?.innerText.trim() || null;
-          const saticiRaw = item.querySelector('span.mn_v8')?.innerText.trim() || null;
+          const saticiRaw = item.querySelector('div > span.v_v8')?.innerText.trim() || null;
 
           return {
             link: additionalData.link,
