@@ -1,1 +1,62 @@
-aaa
+name: Scraper_concurent
+
+on:
+  workflow_dispatch: # Manuel çalıştırmaya izin ver
+  # schedule:
+  #   - cron: '0 3 * * *' # (Geçici olarak kapatıldı)
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    strategy:
+          matrix:
+            script: [
+              "scrape_api_urunlerim_rakipler_kalan1.mjs",
+              "scrape_api_urunlerim_rakipler_kalan2.mjs",
+              "scrape_api_urunlerim_rakipler_kalan3.mjs",
+              "scrape_api_urunlerim_rakipler_kalan4.mjs",
+              "scrape_api_urunlerim_rakipler_kalan5.mjs"
+            ]
+
+    steps:
+      - name: Check if user is authorized
+        if: github.actor != github.repository_owner
+        run: |
+          echo "❌ Unauthorized user: ${{ github.actor }}. Only the repository owner can run this workflow."
+          exit 1
+
+      - name: Check out the code
+        uses: actions/checkout@v4  # Updated to latest version
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4  # Updated to latest version
+        with:
+          node-version: '22'
+          cache: 'npm'  # Add caching for faster installs
+
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@latest  # Official Chrome setup
+        with:
+          chrome-version: stable  # Explicitly use stable version
+
+      - name: Install dependencies
+        run: npm ci  # Clean install for CI reliability
+
+      - name: Run scraper with Xvfb
+        run: |
+          cd tests
+          node ${{ matrix.script }}
+        env:
+          PG_PASSWORD: ${{ secrets.PG_PASSWORD }}  # Secrets'dan alınan PG_PASSWORD
+          PG_CONNECTION_STRING_BASE: ${{ secrets.PG_CONNECTION_STRING_BASE }}  # Secrets'dan alınan PG_CONNECTION_STRING_BASE
+          PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}  # Secrets'dan alınan PG_VIEW_NAME
+          PG_SUPABASEURL: ${{ secrets.PG_SUPABASEURL }}  # Secrets'dan alınan PG_SUPABASEURL
+          PG_SUPABASEKEY: ${{ secrets.PG_SUPABASEKEY }}  # Secrets'dan alınan PG_SUPABASEKEY
+          PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}  # Secrets'dan alınan PG_PROXYPORT
+          PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}  # Secrets'dan alınan PG_PROXYUSERNAME
+          PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}  # Secrets'dan alınan PG_PROXYPASSWORD
+          NODE_OPTIONS: --unhandled-rejections=strict  # Better error handling
