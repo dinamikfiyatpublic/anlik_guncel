@@ -37,7 +37,7 @@ const connectionString = base.replace('@', `${encodedPassword}@`);
 
 const viewName = process.env.PG_VIEW_NAME;
 
-const limit = pLimit(1);
+const limit = pLimit(10);
 const logFile = './sayfa_sureleri_log.txt'; // Süre log dosyası
 
 async function fetchLinksUntilEmpty() {
@@ -57,11 +57,25 @@ async function fetchLinksUntilEmpty() {
             const pageStartTime = Date.now();
 
             const res = await client.query(`
-                SELECT
-                    link, ana_kat, alt_kat1, alt_kat2, marka, urun_kodu, timestamp, sira, p_adi,checker
-                FROM ${viewName}
-                where checker = true
-                LIMIT 1;
+                WITH max_sirala AS (
+                    SELECT MAX(sirala) AS max_sirala
+                    FROM ${viewName}
+                    WHERE checker = true
+                    ),
+                    parca_araliklari AS (
+                    SELECT
+                        max_sirala,
+                        (max_sirala / 5.0) AS parca_boyutu
+                    FROM max_sirala
+                    )
+                    SELECT
+                    link, ana_kat, alt_kat1, alt_kat2, marka, urun_kodu, timestamp, sirala, p_adi, checker
+                    FROM ${viewName}, parca_araliklari
+                    WHERE checker = true
+                    AND sirala >= 1
+                    AND sirala <= CEIL(parca_araliklari.parca_boyutu)
+                    ORDER BY sirala ASC
+                    LIMIT 10 OFFSET 0;  
             `);
 
             if (res.rows.length === 0) {

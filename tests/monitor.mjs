@@ -2,7 +2,15 @@ import { spawn } from 'child_process';
 import pkg from 'pg';
 import * as fs from 'fs';
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Modülün bulunduğu dosya yolunu ve dizin bilgisini al
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Bir üst dizindeki .env dosyasını yükle
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const { Client } = pkg;
 
@@ -14,7 +22,8 @@ const connectionString = base.replace('@', `${encodedPassword}@`);
 
 const viewName = process.env.PG_VIEW_NAME;
 
-let child = null;
+let childProcesses = [];
+let completedProcesses = 0; // Tamamlanan süreç sayısı
 
 function logTimeToFile(message) {
     const now = new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' });
@@ -22,41 +31,62 @@ function logTimeToFile(message) {
     fs.appendFileSync('log.txt', logMessage);
 }
 
-async function isViewStillHasData() {
+// Her bir parça için veriyi kontrol et
+async function isViewStillHasData(parcaIndex) {
     const client = new Client({ connectionString });
     await client.connect();
 
     const res = await client.query(`
         SELECT COUNT(*) as count
         FROM ${viewName}
-        where checker = true;
+        WHERE checker = true
+        AND sirala >= ${(parcaIndex - 1) * 100} AND sirala <= ${parcaIndex * 100};  -- Parça aralığına göre sorgu
     `);
 
     await client.end();
     return parseInt(res.rows[0].count) > 0;
 }
 
-function startMainProcess() {
-    console.log('Denetleyici: Ana işlem başlatılıyor...');
-    logTimeToFile('Ana işlem BAŞLADI');
+function startProcess(parcaIndex) {
+    console.log(`Denetleyici: Parça ${parcaIndex} başlatılıyor...`);
+    logTimeToFile(`Parça ${parcaIndex} BAŞLADI`);
 
-    child = spawn('node', ['./scrape_api_urunlerim_rakipler_kalan.mjs'], {
+    const child = spawn('node', [`./scrape_api_urunlerim_rakipler_kalan${parcaIndex}.mjs`], {
         stdio: 'inherit'
     });
 
     child.on('exit', async (code) => {
-        console.log(`Denetleyici: Ana işlem ${code} koduyla sonlandı.`);
-        logTimeToFile(`Ana işlem TAMAMLANDI (Çıkış kodu: ${code})`);
+        console.log(`Denetleyici: Parça ${parcaIndex} ${code} koduyla sonlandı.`);
+        logTimeToFile(`Parça ${parcaIndex} TAMAMLANDI (Çıkış kodu: ${code})`);
 
-        const stillHasData = await isViewStillHasData();
+        completedProcesses++;
+
+        const stillHasData = await isViewStillHasData(parcaIndex);
         if (stillHasData) {
-            console.log('Denetleyici: View’de hâlâ veri var. Ana işlem tekrar başlatılacak...');
-            setTimeout(() => startMainProcess(), 3000); // 3 saniye sonra tekrar dene
+            console.log(`Denetleyici: Parça ${parcaIndex} verisi hâlâ mevcut.`);
         } else {
-            console.log('Denetleyici: Veri kalmamış. İzleme durduruluyor.');
-            logTimeToFile('Veri kalmadı, izleme durdu.');
+            console.log(`Denetleyici: Parça ${parcaIndex} veri kalmadı.`);
+        }
+
+        // Tüm süreçler tamamlandığında ana süreci yeniden başlat
+        if (completedProcesses === 5) {
+            console.log('Denetleyici: Tüm parçalar tamamlandı, ana işlem yeniden başlatılacak...');
+            startMainProcess();  // Ana işlemi yeniden başlat
         }
     });
+
+    childProcesses.push(child);
+}
+
+// Ana süreci başlat
+function startMainProcess() {
+    console.log('Denetleyici: Ana işlem başlatılıyor...');
+    logTimeToFile('Ana işlem BAŞLADI');
+
+    // 5 farklı parça başlatılıyor
+    for (let i = 1; i <= 5; i++) {
+        startProcess(i);
+    }
 }
 
 // İzlemeyi başlat

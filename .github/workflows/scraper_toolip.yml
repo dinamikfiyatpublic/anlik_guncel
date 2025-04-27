@@ -39,7 +39,7 @@ jobs:
       - name: Run scraper with Xvfb
         run: |
           cd tests
-          xvfb-run --server-args="-screen 0, 1280x1024x24" node toolip_proxy.mjs
+          node monitor.mjs
         env:
           PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
           PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}
