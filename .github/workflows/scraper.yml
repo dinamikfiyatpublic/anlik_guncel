@@ -2,8 +2,8 @@ name: Scraper Workflow
 
 on:
   workflow_dispatch: # Manuel çalıştırmaya izin ver
-  schedule:
-    - cron: '0 3 * * *' # Her gün saat 06:00'da Türkiye saatine göre çalışır (UTC 03:00)
+  # schedule:
+  #   - cron: '0 3 * * *' # (Geçici olarak kapatıldı)
 
 jobs:
   scrape:
