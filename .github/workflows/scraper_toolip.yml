@@ -1,41 +1,47 @@
 name: Scraper Workflow
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch: # Manuel çalıştırmaya izin ver
+  # schedule:
+  #   - cron: '0 3 * * *' # (Geçici olarak kapatıldı)
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out the code
-      uses: actions/checkout@v4  # Updated to latest version
+      - name: Check if user is authorized
+        if: github.actor != github.repository_owner
+        run: |
+          echo "❌ Unauthorized user: ${{ github.actor }}. Only the repository owner can run this workflow."
+          exit 1
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4  # Updated to latest version
-      with:
-        node-version: '22'
-        cache: 'npm'  # Add caching for faster installs
+      - name: Check out the code
+        uses: actions/checkout@v4  # Updated to latest version
 
-    - name: Install xvfb
-      run: sudo apt-get update && sudo apt-get install -y xvfb
+      - name: Set up Node.js
+        uses: actions/setup-node@v4  # Updated to latest version
+        with:
+          node-version: '22'
+          cache: 'npm'  # Add caching for faster installs
 
-    - name: Install Chrome
-      uses: browser-actions/setup-chrome@latest  # Official Chrome setup
-      with:
-        chrome-version: stable  # Explicitly use stable version
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
 
-    - name: Install dependencies
-      run: npm ci  # Clean install for CI reliability
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@latest  # Official Chrome setup
+        with:
+          chrome-version: stable  # Explicitly use stable version
 
-    - name: Run scraper with Xvfb
-      run: |
-        cd tests
-        xvfb-run --server-args="-screen 0, 1280x1024x24" node toolip_proxy.mjs
-      env:
-        PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
-        PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}
-        PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}
-        NODE_OPTIONS: --unhandled-rejections=strict  # Better error handling
+      - name: Install dependencies
+        run: npm ci  # Clean install for CI reliability
+
+      - name: Run scraper with Xvfb
+        run: |
+          cd tests
+          xvfb-run --server-args="-screen 0, 1280x1024x24" node toolip_proxy.mjs
+        env:
+          PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
+          PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}
+          PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}
+          NODE_OPTIONS: --unhandled-rejections=strict  # Better error handling
