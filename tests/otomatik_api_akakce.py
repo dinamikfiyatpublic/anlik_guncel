@@ -9,7 +9,7 @@ from urllib.parse import quote_plus
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # GitHub token (GitHub Actions ortamında otomatik tanımlıdır)
-github_token = os.getenv('PG_GITHUB_TOKEN')
+github_token = os.getenv('MY_GITHUB_TOKEN')
 
 # PostgreSQL connection details (bunlar da Actions Secrets'tan geliyor olacak)
 db_user = os.getenv('PG_DB_USER')
