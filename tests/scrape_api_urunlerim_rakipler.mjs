@@ -64,6 +64,7 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
         '--disable-dev-shm-usage',
         '--window-size=1920,1080',
         '--disable-blink-features=AutomationControlled',
+        '--ignore-certificate-errors'
       ],
       defaultViewport: {
         width: 1920,
@@ -250,7 +251,7 @@ const run = async () => {
       p_adi: urun.p_adi,
     };
 
-    console.log(`Alt Süreç (${urun_kodu}): Supabase'e yazılıyor:\n`, kayit);
+    //console.log(`Alt Süreç (${urun_kodu}): Supabase'e yazılıyor:\n`, kayit);
 
     const { error: insertError } = await supabase
       .from('dina_f_akakce_details')

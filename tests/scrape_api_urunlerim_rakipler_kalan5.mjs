@@ -75,7 +75,7 @@ async function fetchLinksUntilEmpty() {
                 FROM parca_araliklari, max_sirala
                 )
                 SELECT
-                link, ana_kat, alt_kat1, alt_kat2, marka, urun_kodu, timestamp, sirala, p_adi, checker
+                link, ana_kat, alt_kat1, alt_kat2, marka, urun_kodu, timestamp, sirala, p_adi, checker,sira
                 FROM ${viewName}, sirala_sinirlar
                 WHERE checker = true
                 AND sirala BETWEEN sirala_sinirlar.baslangic AND sirala_sinirlar.bitis

@@ -21,13 +21,14 @@ const launchBrowser = async () => {
   const browser = await puppeteer.launch({
       headless: true,
       args: [
-          `--proxy-server=http://${proxyUrl}`,  
+          `--proxy-server=http://${proxyUrl}`,
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-gpu',
           '--disable-dev-shm-usage',
           '--window-size=1920,1080',
           '--disable-blink-features=AutomationControlled',
+          '--ignore-certificate-errors'
       ],
       defaultViewport: {
           width: 1920,
@@ -38,10 +39,14 @@ const launchBrowser = async () => {
   const page = await browser.newPage();
 
   // Proxy kimlik doğrulama
-  await page.authenticate({
-      username: proxyUsername,
-      password: proxyPassword,
-  });
+  try {
+    await page.authenticate({
+        username: proxyUsername,
+        password: proxyPassword,
+    });
+} catch (err) {
+    console.error('❌ Proxy kimlik doğrulaması başarısız:', err.message);
+}
 
   // Ek HEADLESS detection önleme
   await page.evaluateOnNewDocument(() => {
