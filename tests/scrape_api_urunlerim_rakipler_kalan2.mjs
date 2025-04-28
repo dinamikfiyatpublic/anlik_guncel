@@ -79,8 +79,7 @@ async function fetchLinksUntilEmpty() {
                     FROM ${viewName}, sirala_sinirlar
                     WHERE checker = true
                     AND sirala BETWEEN sirala_sinirlar.baslangic AND sirala_sinirlar.bitis
-                    ORDER BY sirala ASC
-                    LIMIT 10 OFFSET 0;  
+                    ORDER BY sirala ASC;
             `);
 
             if (res.rows.length === 0) {
