@@ -58,29 +58,29 @@ async function fetchLinksUntilEmpty() {
 
             const res = await client.query(`
                 WITH max_sirala AS (
-                SELECT MAX(sirala) AS max_sirala
-                FROM ${viewName}
-                WHERE checker = true
-                ),
-                parca_araliklari AS (
-                SELECT
-                    max_sirala,
-                    (max_sirala / 5.0) AS parca_boyutu
-                FROM max_sirala
-                ),
-                sirala_sinirlar AS (
-                SELECT
-                    CEIL(parca_araliklari.parca_boyutu * 4) + 1 AS baslangic,
-                    max_sirala AS bitis
-                FROM parca_araliklari, max_sirala
-                )
-                SELECT
-                link, ana_kat, alt_kat1, alt_kat2, marka, urun_kodu, timestamp, sirala, p_adi, checker,sira
-                FROM ${viewName}, sirala_sinirlar
-                WHERE checker = true
-                AND sirala BETWEEN sirala_sinirlar.baslangic AND sirala_sinirlar.bitis
-                ORDER BY sirala ASC
-                LIMIT 10 OFFSET 0;
+                        SELECT MAX(sirala) AS max_sirala
+                        FROM ${viewName}
+                        WHERE checker = true
+                    ),
+                    parca_araliklari AS (
+                        SELECT
+                            max_sirala.max_sirala,
+                            (max_sirala.max_sirala / 5.0) AS parca_boyutu
+                        FROM max_sirala
+                    ),
+                    sirala_sinirlar AS (
+                        SELECT
+                            CEIL(parca_araliklari.parca_boyutu * 4) + 1 AS baslangic,
+                            parca_araliklari.max_sirala AS bitis
+                        FROM parca_araliklari
+                    )
+                    SELECT
+                        link, ana_kat, alt_kat1, alt_kat2, marka, urun_kodu, timestamp, sirala, p_adi, checker, sira
+                    FROM ${viewName}, sirala_sinirlar
+                    WHERE checker = true
+                    AND sirala BETWEEN sirala_sinirlar.baslangic AND sirala_sinirlar.bitis
+                    ORDER BY sirala ASC
+                    LIMIT 10 OFFSET 0;
             `);
 
             if (res.rows.length === 0) {
