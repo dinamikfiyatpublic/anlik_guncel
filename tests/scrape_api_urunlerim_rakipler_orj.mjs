@@ -49,13 +49,7 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
   const proxyPort = process.env.PG_PROXYPORT;
   const proxyUsername = process.env.PG_PROXYUSERNAME;
   const proxyPassword = process.env.PG_PROXYPASSWORD;
-  const proxyUrl_old = `${proxyHost}:${proxyPort}`;
-
-  const proxy_ip = process.env.PROXY_IP;  // Example: "10.10.20.15"
-  const proxy_port = process.env.PROXY_PORT;            // Port chosen in the phone app
-  const proxy_user = process.env.PROXY_USER;    // Proxy username
-  const proxy_pass = process.env.PROXY_PASS;    
-  const proxyUrl = `http://${proxy_user}:${proxy_pass}@${proxy_ip}:${proxy_port}`;
+  const proxyUrl = `${proxyHost}:${proxyPort}`;
 
   let browser;
 
@@ -63,7 +57,7 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
     browser = await puppeteer.launch({
       headless: true,
       args: [
-        `--proxy-server=${proxy_ip}:${proxy_port}`, // Sadece IP ve Port!
+        `--proxy-server=http://${proxyUrl}`,
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-gpu',
@@ -131,8 +125,8 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
     );
 
     await page.authenticate({
-      username: proxy_user,
-      password: proxy_pass
+      username: proxyUsername,
+      password: proxyPassword
     });
 
     try {
