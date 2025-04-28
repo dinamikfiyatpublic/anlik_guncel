@@ -4,6 +4,10 @@ import logging
 import psycopg2
 import requests
 from urllib.parse import quote_plus
+from dotenv import load_dotenv
+
+# .env dosyasını yükle
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -11,7 +15,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # GitHub token (GitHub Actions ortamında otomatik tanımlıdır)
 github_token = os.getenv('MY_GITHUB_TOKEN')
 
-# PostgreSQL connection details (bunlar da Actions Secrets'tan geliyor olacak)
+# PostgreSQL connection details (Actions Secrets'tan geliyor olacak)
 db_user = os.getenv('PG_DB_USER')
 db_password = os.getenv('PG_PASSWORD')
 db_host = os.getenv('PG_HOST')
@@ -19,13 +23,13 @@ db_port = os.getenv('PG_PORT')
 db_name = os.getenv('PG_NAME')
 viewName = os.getenv('PG_VIEW_NAME')
 
-# Encode the password for safe use in connection string
+# Parolayı güvenli şekilde şifrele
 encoded_password = quote_plus(db_password)
 
-# PostgreSQL connection string
+# PostgreSQL bağlantı string'ini oluştur
 connection_string = f"postgresql://{db_user}:{encoded_password}@{db_host}:{db_port}/{db_name}"
 
-# Function to get the count of links
+# PostgreSQL'e bağlanacak fonksiyon
 def check_supabase():
     try:
         with psycopg2.connect(connection_string) as conn:
@@ -42,7 +46,7 @@ def check_supabase():
         logging.error(f"Failed to execute the query: {e}")
         return None
 
-# Function to trigger a GitHub workflow
+# GitHub workflow'u tetiklemek için fonksiyon
 def trigger_workflow(workflow_name):
     response = requests.post(
         f"https://api.github.com/repos/dinamikfiyatpublic/anlik_guncel/actions/workflows/{workflow_name}/dispatches",
@@ -51,11 +55,12 @@ def trigger_workflow(workflow_name):
     )
     if response.status_code == 204:
         logging.info(f"Workflow '{workflow_name}' triggered successfully.")
-        time.sleep(5)  # Wait for a few seconds after triggering
+        time.sleep(5)  # Workflow tetiklendikten sonra birkaç saniye bekle
     else:
         logging.error(f"Failed to trigger workflow '{workflow_name}': {response.status_code} - {response.text}")
     return response
 
+# Çalışan workflow'ları kontrol etme fonksiyonu
 def check_running_workflows():
     # Get all running workflows
     response = requests.get(
@@ -69,6 +74,7 @@ def check_running_workflows():
     runs = response.json().get("workflow_runs", [])
     return [run for run in runs if run["status"] == "in_progress"]
 
+# Workflow tamamlanana kadar beklemek için fonksiyon
 def wait_for_workflow_completion(workflow_name):
     while True:
         running_workflows = check_running_workflows()
