@@ -59,4 +59,8 @@ jobs:
           PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}  # Secrets'dan alınan PG_PROXYPORT
           PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}  # Secrets'dan alınan PG_PROXYUSERNAME
           PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}  # Secrets'dan alınan PG_PROXYPASSWORD
-          NODE_OPTIONS: --unhandled-rejections=strict  # Better error handling
+          PROXY_IP: ${{ secrets.PROXY_IP }}              # <-- EKLENDİ
+          PROXY_PORT: ${{ secrets.PROXY_PORT }}          # <-- EKLENDİ
+          PROXY_USER: ${{ secrets.PROXY_USER }}          # <-- EKLENDİ
+          PROXY_PASS: ${{ secrets.PROXY_PASS }}          # <-- EKLENDİ
+          NODE_OPTIONS: --unhandled-rejections=strict
