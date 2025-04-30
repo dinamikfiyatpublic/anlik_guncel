@@ -1,0 +1,29 @@
+name: Use Türkiye Proxy via Tailscale
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch-with-proxy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Connect to Tailscale
+      uses: tailscale/github-action@v3
+      with:
+        oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+        tags: tag:ci
+        version: 1.66.0
+
+    - name: Check Tailscale IP
+      run: tailscale ip -4
+
+    - name: Test request via Türkiye proxy
+      env:
+        PROXY_URL: ${{ secrets.TURKEY_PROXY_URL }}
+      run: |
+        echo "Testing through proxy: $PROXY_URL"
+        curl --proxy "$PROXY_URL" http://ip-api.com/json/
