@@ -10,14 +10,20 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Connect to Tailscale using Auth Key
+    - name: Connect to Tailscale
       run: |
-        echo "Connecting to Tailscale using auth key"
-        curl -X POST "https://api.tailscale.com/api/v2/device/authenticate" \
-          -d "auth_key=${{ secrets.TS_AUTH_KEY }}" \
-          -H "Authorization: Bearer ${{ secrets.TS_AUTH_KEY }}" \
-          -o device_response.json
-        cat device_response.json
+        echo "Connecting to Tailscale"
+        sudo apt-get update
+        sudo apt-get install -y tailscale
+
+        # Tailscale'i auth key ile başlatın ve çıkış düğümünü belirtin
+        sudo tailscale up --authkey=${{ secrets.TS_AUTH_KEY }} --exit-node=100.77.251.95 --accept-routes --accept-dns
+
+        echo "Tailscale bağlantısı kuruldu. Durum kontrol ediliyor..."
+        tailscale status
+        echo "Tailscale IP adresleri:"
+        tailscale ip -4
+        tailscale ip -6
 
     - name: Check Public IP (Should be Türkiye)
       run: |
