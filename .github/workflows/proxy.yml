@@ -26,7 +26,9 @@ jobs:
       with:
         oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
         oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-        args: --exit-node=100.77.X.X --exit-node-allow-lan-access
+        args: --exit-node=100.77.251.95 --exit-node-allow-lan-access
 
     - name: Check Public IP (Should be Türkiye)
-      run: curl https://ipinfo.io
+      run: |
+        echo "Public IP via Türkiye Exit Node:"
+        curl https://ipinfo.io
