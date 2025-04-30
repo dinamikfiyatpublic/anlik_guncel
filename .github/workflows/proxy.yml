@@ -10,30 +10,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Get OAuth Token
+    - name: Connect to Tailscale using Auth Key
       run: |
-        echo "Getting OAuth Token"
-        curl -X POST "https://api.tailscale.com/api/v2/oauth/token" \
-          -d "client_id=${{ secrets.TS_OAUTH_CLIENT_ID }}" \
-          -d "client_secret=${{ secrets.TS_OAUTH_SECRET }}" \
-          -d "grant_type=client_credentials" \
-          -d "scope=read" \
-          -o token.json
-        cat token.json
-
-    - name: Connect to Tailscale via Token
-      run: |
-        TOKEN=$(jq -r '.access_token' token.json)
-        echo "Using token: $TOKEN"
-        curl -X GET "https://api.tailscale.com/api/v2/tailnet/dinamikfiyat@gmail.com/devices" \
-          -H "Authorization: Bearer $TOKEN"  # Token ile kimlik doğrulama
-
-    - name: Connect to Tailscale with Exit Node
-      run: |
-        echo "Connecting to Tailscale using exit node"
-        curl -X POST "https://api.tailscale.com/api/v2/tailnet/dinamikfiyat@gmail.com/exitnode" \
-          -H "Authorization: Bearer $TOKEN" \
-          -d "exit_node=100.77.251.95"  # Türkiye'deki cihazınızın IP'sini kullanın
+        echo "Connecting to Tailscale using auth key"
+        curl -X POST "https://api.tailscale.com/api/v2/device/authenticate" \
+          -d "auth_key=${{ secrets.TS_AUTH_KEY }}" \
+          -H "Authorization: Bearer ${{ secrets.TS_AUTH_KEY }}" \
+          -o device_response.json
+        cat device_response.json
 
     - name: Check Public IP (Should be Türkiye)
       run: |
