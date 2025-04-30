@@ -25,5 +25,5 @@ jobs:
       run: |
         TOKEN=$(jq -r '.access_token' token.json)
         echo "Using token: $TOKEN"
-        curl -X GET "https://api.tailscale.com/api/v2/tailnet/example.com/devices" \
+        curl -X GET "https://api.tailscale.com/api/v2/tailnet/denko-hp/devices" \
           -H "Authorization: Bearer $TOKEN"
