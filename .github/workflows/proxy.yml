@@ -10,23 +10,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Get OAuth Token
-      run: |
-        echo "Getting OAuth Token"
-        curl -X POST "https://api.tailscale.com/api/v2/oauth/token" \
-          -d "client_id=${{ secrets.TS_OAUTH_CLIENT_ID }}" \
-          -d "client_secret=${{ secrets.TS_OAUTH_SECRET }}" \
-          -d "grant_type=client_credentials" \
-          -d "scope=read" \
-          -o token.json
-        cat token.json
-
     - name: Connect to Tailscale
-      uses: tailscale/github-action@v3
-      with:
-        oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-        oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-        args: --exit-node=100.77.251.95 --exit-node-allow-lan-access
+      run: |
+        echo "Connecting to Tailscale with authkey"
+        sudo tailscale up --authkey=${{ secrets.TS_AUTH_KEY }} --exit-node=100.77.251.95 --accept-routes --accept-dns
 
     - name: Check Public IP (Should be Türkiye)
       run: curl https://ipinfo.io
