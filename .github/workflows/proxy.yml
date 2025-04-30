@@ -10,10 +10,18 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    - name: Install Tailscale Repository Key
+      run: |
+        curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/noble.no_gpg.key | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
+
+    - name: Add Tailscale Repository
+      run: |
+        echo 'deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/ubuntu noble main' | sudo tee /etc/apt/sources.list.d/tailscale.list
+        sudo apt-get update
+
     - name: Install and Connect to Tailscale
       run: |
         echo "Installing and Connecting to Tailscale"
-        sudo apt-get update
         sudo apt-get install -y tailscale
 
         # Tailscale'i auth key ile başlatın ve çıkış düğümünü belirtin
