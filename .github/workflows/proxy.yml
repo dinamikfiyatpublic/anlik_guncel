@@ -20,15 +20,16 @@ jobs:
           -d "scope=read" \
           -o token.json
         cat token.json
-
-    - name: Tailscale
-      uses: tailscale/github-action@v3
-      with:
-        oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-        oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-        args: --exit-node=100.77.251.95 --exit-node-allow-lan-access
-
+    
+    - name: Connect to Tailscale via Token
+      run: |
+        TOKEN=$(jq -r '.access_token' token.json)
+        echo "Using token: $TOKEN"
+        curl -X GET "https://api.tailscale.com/api/v2/tailnet/dinamikfiyat@gmail.com/devices" \
+          -H "Authorization: Bearer $TOKEN"  # Token ile kimlik doğrulama
+    
     - name: Check Public IP (Should be Türkiye)
       run: |
         echo "Public IP via Türkiye Exit Node:"
         curl https://ipinfo.io
+    
