@@ -1,4 +1,4 @@
-name: Use Türkiye Proxy via Tailscale
+name: Türkiye Proxy via Tailscale
 
 on:
   workflow_dispatch:
