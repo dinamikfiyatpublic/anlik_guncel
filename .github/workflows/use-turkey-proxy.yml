@@ -18,10 +18,12 @@ jobs:
         version: 1.66.0
 
     - name: Check Tailscale IP
-      run: tailscale ip -4
+      run: |
+        tailscale ip -4
 
     - name: Test Tailscale Authentication
-      run: curl -X GET "https://api.tailscale.com/api/v2/tokens/me" -H "Authorization: Bearer ${{ secrets.TS_OAUTH_CLIENT_ID }}"
+      run: |
+        curl -X GET "https://api.tailscale.com/api/v2/tokens/me" -H "Authorization: Bearer ${{ secrets.TS_OAUTH_CLIENT_ID }}"
 
     - name: Test request via Türkiye proxy
       env:
@@ -29,4 +31,3 @@ jobs:
       run: |
         echo "Testing through proxy: $PROXY_URL"
         curl --proxy "$PROXY_URL" http://ip-api.com/json/
-
