@@ -1,4 +1,4 @@
-name: Proxy
+name: Use Türkiye Proxy via Tailscale
 
 on:
   workflow_dispatch:
@@ -10,36 +10,23 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Install Tailscale Repository Key
+    - name: Get OAuth Token
       run: |
-        echo "Installing Tailscale Repository Key"
-        sudo apt-get update
-        sudo apt-get install -y gnupg apt-transport-https
+        echo "Getting OAuth Token"
+        curl -X POST "https://api.tailscale.com/api/v2/oauth/token" \
+          -d "client_id=${{ secrets.TS_OAUTH_CLIENT_ID }}" \
+          -d "client_secret=${{ secrets.TS_OAUTH_SECRET }}" \
+          -d "grant_type=client_credentials" \
+          -d "scope=read" \
+          -o token.json
+        cat token.json
 
-        # Tailscale'in GPG anahtarını gpg ile içe aktarın ve trusted.gpg.d'ye kaydedin
-        sudo gpg --no-default-keyring --keyring /etc/apt/trusted.gpg.d/tailscale-archive-keyring.gpg --import https://pkgs.tailscale.com/stable/ubuntu/noble.gpg
-
-        # Ardından depoyu ekleyin (signed-by artık doğrudan dosya yolunu gösterecek)
-        echo "deb [signed-by=/etc/apt/trusted.gpg.d/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/ubuntu noble main" | sudo tee /etc/apt/sources.list.d/tailscale.list
-        sudo apt-get update
-
-    - name: Install and Connect to Tailscale
-      run: |
-        echo "Installing and Connecting to Tailscale"
-        sudo apt-get install -y tailscale
-
-        # Tailscale'i auth key ile başlatın ve çıkış düğümünü belirtin
-        # Lütfen ${{ secrets.TS_AUTH_KEY }} yerine geçerli bir Tailscale yetkilendirme anahtarınızı ekleyin.
-        # Lütfen 100.77.251.95 yerine Tailscale ağınızdaki Türkiye cihazının DOĞRU Tailscale IP adresini ekleyin.
-        sudo tailscale up --authkey=${{ secrets.TS_AUTH_KEY }} --exit-node=100.77.251.95 --accept-routes --accept-dns
-
-        echo "Tailscale bağlantısı kuruldu. Durum kontrol ediliyor..."
-        tailscale status
-        echo "Tailscale IP adresleri:"
-        tailscale ip -4
-        tailscale ip -6
+    - name: Connect to Tailscale
+      uses: tailscale/github-action@v3
+      with:
+        oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+        args: --exit-node=100.77.251.95 --exit-node-allow-lan-access
 
     - name: Check Public IP (Should be Türkiye)
-      run: |
-        echo "Public IP via Türkiye Exit Node:"
-        curl https://ipinfo.io
+      run: curl https://ipinfo.io
