@@ -6,25 +6,31 @@ on:
 jobs:
   fetch-with-proxy:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout
       uses: actions/checkout@v3
 
+    - name: Install Tailscale Repository Key
+      run: |
+        echo "Installing Tailscale Repository Key"
+        sudo apt-get update
+        sudo apt-get install -y gnupg apt-transport-https
+
+        # Tailscale'in GPG anahtarını doğrudan apt-key ile ekleyin (eski yöntem, ama bazen daha güvenilir)
+        wget -qO- https://pkgs.tailscale.com/stable/ubuntu/noble.gpg | sudo apt-key add -
+        
+        # Ardından depoyu ekleyin.
+        echo "deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/ubuntu noble main" | sudo tee /etc/apt/sources.list.d/tailscale.list
+        sudo apt-get update
+
     - name: Install and Connect to Tailscale
       run: |
         echo "Installing and Connecting to Tailscale"
-        sudo apt-get update
-
-        # Resmi Tailscale deposunu ekleyin
-        curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/noble.gpg | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
-        echo "deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/ubuntu noble main" | sudo tee /etc/apt/sources.list.d/tailscale.list
-
-        # Paket listesini güncelle ve tailscale'i yükle
-        sudo apt-get update
         sudo apt-get install -y tailscale
 
-        # Tailscale'e bağlan
+        # Tailscale'i auth key ile başlatın ve çıkış düğümünü belirtin
+        # Lütfen ${{ secrets.TS_AUTH_KEY }} yerine geçerli bir Tailscale yetkilendirme anahtarınızı ekleyin.
+        # Lütfen 100.77.251.95 yerine Tailscale ağınızdaki Türkiye cihazının DOĞRU Tailscale IP adresini ekleyin.
         sudo tailscale up --authkey=${{ secrets.TS_AUTH_KEY }} --exit-node=100.77.251.95 --accept-routes --accept-dns
 
         echo "Tailscale bağlantısı kuruldu. Durum kontrol ediliyor..."
