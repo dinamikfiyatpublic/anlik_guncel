@@ -10,23 +10,13 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Install Tailscale Repository Key
-      run: |
-        curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/noble.no_gpg.key | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
-
-    - name: Add Tailscale Repository
-      run: |
-        echo 'deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/ubuntu noble main' | sudo tee /etc/apt/sources.list.d/tailscale.list
-        sudo apt-get update
-
     - name: Install and Connect to Tailscale
       run: |
         echo "Installing and Connecting to Tailscale"
+        sudo apt-get update
         sudo apt-get install -y tailscale
 
         # Tailscale'i auth key ile başlatın ve çıkış düğümünü belirtin
-        # Lütfen ${{ secrets.TS_AUTH_KEY }} yerine geçerli bir Tailscale yetkilendirme anahtarınızı ekleyin.
-        # Lütfen 100.77.251.95 yerine Tailscale ağınızdaki Türkiye cihazının DOĞRU Tailscale IP adresini ekleyin.
         sudo tailscale up --authkey=${{ secrets.TS_AUTH_KEY }} --exit-node=100.77.251.95 --accept-routes --accept-dns
 
         echo "Tailscale bağlantısı kuruldu. Durum kontrol ediliyor..."
@@ -35,14 +25,7 @@ jobs:
         tailscale ip -4
         tailscale ip -6
 
-    - name: Örnek API Çağrısı (Cihazları Listele)
-      run: |
-        echo "Tailscale API'sine erişiliyor..."
-        # Lütfen GitHub Secrets'ınızda TS_API_TOKEN adlı geçerli bir API erişim belirtecinizin olduğundan emin olun.
-        curl -H "Authorization: Bearer ${{ secrets.TS_API_TOKEN }}" https://api.tailscale.com/api/v2/devices
-        echo "Tailscale API çağrısı tamamlandı."
-
     - name: Check Public IP (Should be Türkiye)
       run: |
         echo "Public IP via Türkiye Exit Node:"
-        curl https://ipinfo.io
+        curl https://ipinfo.io 
