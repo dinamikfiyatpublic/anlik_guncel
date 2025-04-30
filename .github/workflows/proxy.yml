@@ -20,16 +20,22 @@ jobs:
           -d "scope=read" \
           -o token.json
         cat token.json
-    
+
     - name: Connect to Tailscale via Token
       run: |
         TOKEN=$(jq -r '.access_token' token.json)
         echo "Using token: $TOKEN"
         curl -X GET "https://api.tailscale.com/api/v2/tailnet/dinamikfiyat@gmail.com/devices" \
           -H "Authorization: Bearer $TOKEN"  # Token ile kimlik doğrulama
-    
+
+    - name: Connect to Tailscale with Exit Node
+      run: |
+        echo "Connecting to Tailscale using exit node"
+        curl -X POST "https://api.tailscale.com/api/v2/tailnet/dinamikfiyat@gmail.com/exitnode" \
+          -H "Authorization: Bearer $TOKEN" \
+          -d "exit_node=100.77.251.95"  # Türkiye'deki cihazınızın IP'sini kullanın
+
     - name: Check Public IP (Should be Türkiye)
       run: |
         echo "Public IP via Türkiye Exit Node:"
         curl https://ipinfo.io
-    
