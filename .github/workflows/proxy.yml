@@ -1,0 +1,32 @@
+name: Proxy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch-with-proxy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Get OAuth Token
+      run: |
+        echo "Getting OAuth Token"
+        curl -X POST "https://api.tailscale.com/api/v2/oauth/token" \
+          -d "client_id=${{ secrets.TS_OAUTH_CLIENT_ID }}" \
+          -d "client_secret=${{ secrets.TS_OAUTH_SECRET }}" \
+          -d "grant_type=client_credentials" \
+          -d "scope=read" \
+          -o token.json
+        cat token.json
+
+    - name: Tailscale
+      uses: tailscale/github-action@v3
+      with:
+        oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+        args: --exit-node=100.77.X.X --exit-node-allow-lan-access
+
+    - name: Check Public IP (Should be Türkiye)
+      run: curl https://ipinfo.io
