@@ -17,6 +17,8 @@ jobs:
         sudo apt-get install -y tailscale
 
         # Tailscale'i auth key ile başlatın ve çıkış düğümünü belirtin
+        # Lütfen ${{ secrets.TS_AUTH_KEY }} yerine geçerli bir Tailscale yetkilendirme anahtarınızı ekleyin.
+        # Lütfen 100.77.251.95 yerine Tailscale ağınızdaki Türkiye cihazının DOĞRU Tailscale IP adresini ekleyin.
         sudo tailscale up --authkey=${{ secrets.TS_AUTH_KEY }} --exit-node=100.77.251.95 --accept-routes --accept-dns
 
         echo "Tailscale bağlantısı kuruldu. Durum kontrol ediliyor..."
@@ -24,6 +26,13 @@ jobs:
         echo "Tailscale IP adresleri:"
         tailscale ip -4
         tailscale ip -6
+
+    - name: Örnek API Çağrısı (Cihazları Listele)
+      run: |
+        echo "Tailscale API'sine erişiliyor..."
+        # Lütfen GitHub Secrets'ınızda TS_API_TOKEN adlı geçerli bir API erişim belirtecinizin olduğundan emin olun.
+        curl -H "Authorization: Bearer ${{ secrets.TS_API_TOKEN }}" https://api.tailscale.com/api/v2/devices
+        echo "Tailscale API çağrısı tamamlandı."
 
     - name: Check Public IP (Should be Türkiye)
       run: |
