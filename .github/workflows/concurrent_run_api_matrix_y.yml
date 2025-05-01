@@ -73,3 +73,17 @@ jobs:
         run: |
           echo "Disconnecting from Tailscale"
           sudo tailscale logout
+       env:
+          PG_PASSWORD: ${{ secrets.PG_PASSWORD }}  # Secrets'dan alınan PG_PASSWORD
+          PG_CONNECTION_STRING_BASE: ${{ secrets.PG_CONNECTION_STRING_BASE }}  # Secrets'dan alınan PG_CONNECTION_STRING_BASE
+          PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}  # Secrets'dan alınan PG_VIEW_NAME
+          PG_SUPABASEURL: ${{ secrets.PG_SUPABASEURL }}  # Secrets'dan alınan PG_SUPABASEURL
+          PG_SUPABASEKEY: ${{ secrets.PG_SUPABASEKEY }}  # Secrets'dan alınan PG_SUPABASEKEY
+          PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}  # Secrets'dan alınan PG_PROXYPORT
+          PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}  # Secrets'dan alınan PG_PROXYUSERNAME
+          PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}  # Secrets'dan alınan PG_PROXYPASSWORD
+          PROXY_IP: ${{ secrets.PROXY_IP }}              # <-- EKLENDİ
+          PROXY_PORT: ${{ secrets.PROXY_PORT }}          # <-- EKLENDİ
+          PROXY_USER: ${{ secrets.PROXY_USER }}          # <-- EKLENDİ
+          PROXY_PASS: ${{ secrets.PROXY_PASS }}          # <-- EKLENDİ
+          NODE_OPTIONS: --unhandled-rejections=strict
