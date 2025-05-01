@@ -1,4 +1,4 @@
-name: proxy
+name: proxy_ok
 
 on:
   workflow_dispatch:
