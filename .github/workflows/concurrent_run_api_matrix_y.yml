@@ -1,11 +1,26 @@
 name: Scraper_concurent_y
 
 on:
-  workflow_dispatch: # Manuel çalıştırma
+  workflow_dispatch:
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
+
+    env:
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+      PG_CONNECTION_STRING_BASE: ${{ secrets.PG_CONNECTION_STRING_BASE }}
+      PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}
+      PG_SUPABASEURL: ${{ secrets.PG_SUPABASEURL }}
+      PG_SUPABASEKEY: ${{ secrets.PG_SUPABASEKEY }}
+      PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
+      PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}
+      PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}
+      PROXY_IP: ${{ secrets.PROXY_IP }}
+      PROXY_PORT: ${{ secrets.PROXY_PORT }}
+      PROXY_USER: ${{ secrets.PROXY_USER }}
+      PROXY_PASS: ${{ secrets.PROXY_PASS }}
+      NODE_OPTIONS: --unhandled-rejections=strict
 
     strategy:
       matrix:
@@ -61,8 +76,10 @@ jobs:
                             --exit-node=100.77.251.95 \
                             --accept-routes \
                             --accept-dns
+          echo "Tailscale connected."
+          tailscale ip -4
 
-      - name: Run scraper with Xvfb (Proxy-free)
+      - name: Run scraper with Xvfb (Türkiye IP üzerinden)
         run: |
           echo "Running scraper: ${{ matrix.script }}"
           cd tests
@@ -73,17 +90,3 @@ jobs:
         run: |
           echo "Disconnecting from Tailscale"
           sudo tailscale logout
-        env:
-           PG_PASSWORD: ${{ secrets.PG_PASSWORD }}  # Secrets'dan alınan PG_PASSWORD
-           PG_CONNECTION_STRING_BASE: ${{ secrets.PG_CONNECTION_STRING_BASE }}  # Secrets'dan alınan PG_CONNECTION_STRING_BASE
-           PG_VIEW_NAME: ${{ secrets.PG_VIEW_NAME }}  # Secrets'dan alınan PG_VIEW_NAME
-           PG_SUPABASEURL: ${{ secrets.PG_SUPABASEURL }}  # Secrets'dan alınan PG_SUPABASEURL
-           PG_SUPABASEKEY: ${{ secrets.PG_SUPABASEKEY }}  # Secrets'dan alınan PG_SUPABASEKEY
-           PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}  # Secrets'dan alınan PG_PROXYPORT
-           PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}  # Secrets'dan alınan PG_PROXYUSERNAME
-           PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}  # Secrets'dan alınan PG_PROXYPASSWORD
-           PROXY_IP: ${{ secrets.PROXY_IP }}              # <-- EKLENDİ
-           PROXY_PORT: ${{ secrets.PROXY_PORT }}          # <-- EKLENDİ
-           PROXY_USER: ${{ secrets.PROXY_USER }}          # <-- EKLENDİ
-           PROXY_PASS: ${{ secrets.PROXY_PASS }}          # <-- EKLENDİ
-           NODE_OPTIONS: --unhandled-rejections=strict
