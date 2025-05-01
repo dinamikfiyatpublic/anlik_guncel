@@ -1,0 +1,19 @@
+name: proxy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch-with-proxy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Connect to Tailscale
+      run: |
+        echo "Connecting to Tailscale with authkey"
+        sudo tailscale up --authkey=${{ secrets.TS_AUTH_KEY }} --exit-node=100.77.251.95 --accept-routes --accept-dns
+
+    - name: Check Public IP (Should be Türkiye)
+      run: curl https://ipinfo.io
