@@ -1,4 +1,4 @@
-name: Scraper_concurent
+name: Scraper_concurent_y
 
 on:
   workflow_dispatch: # Manuel çalıştırma
