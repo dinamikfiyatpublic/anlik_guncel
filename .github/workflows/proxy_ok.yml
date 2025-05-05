@@ -1,4 +1,4 @@
-name: proxy
+name: proxy_ok
 
 on:
   workflow_dispatch:
@@ -6,20 +6,22 @@ on:
 jobs:
   fetch-with-proxy:
     runs-on: ubuntu-latest
+
     steps:
     - name: Checkout
       uses: actions/checkout@v3
 
     - name: Install Tailscale
       run: |
+        echo "Installing Tailscale"
         curl -fsSL https://tailscale.com/install.sh | sh
 
     - name: Start tailscaled
       run: |
-        sudo nohup tailscaled > /tmp/tailscaled.log 2>&1 &
-        sleep 5  # tailscaled'ın başlatılması için kısa süre bekle
+        echo "Starting tailscaled"
+        sudo tailscaled & sleep 5
 
-    - name: Connect to Tailscale
+    - name: Connect to Tailscale with Auth Key
       run: |
         echo "Connecting to Tailscale with authkey"
         sudo tailscale up --authkey=${{ secrets.TS_AUTH_KEY }} \
@@ -28,4 +30,12 @@ jobs:
                           --accept-dns
 
     - name: Check Public IP (Should be Türkiye)
-      run: curl https://ipinfo.io
+      run: |
+        echo "Checking IP (Should be Türkiye exit-node)"
+        curl https://ipinfo.io
+
+    - name: Disconnect from Tailscale
+      if: always()
+      run: |
+        echo "Disconnecting from Tailscale"
+        sudo tailscale logout

@@ -45,25 +45,12 @@ const additionalData = {
 const scrapeAkakce = async (urun_kodu, additionalData) => {
   const url = `https://www.akakce.com/j/gl/?t=pr&i=${urun_kodu}&s=0&b=315`;
 
-  const proxyHost = 'proxy.toolip.io';
-  const proxyPort = process.env.PG_PROXYPORT;
-  const proxyUsername = process.env.PG_PROXYUSERNAME;
-  const proxyPassword = process.env.PG_PROXYPASSWORD;
-  const proxyUrl_old = `${proxyHost}:${proxyPort}`;
-
-  const proxy_ip = process.env.PROXY_IP;  // Example: "10.10.20.15"
-  const proxy_port = process.env.PROXY_PORT;            // Port chosen in the phone app
-  const proxy_user = process.env.PROXY_USER;    // Proxy username
-  const proxy_pass = process.env.PROXY_PASS;    
-  const proxyUrl = `http://${proxy_user}:${proxy_pass}@${proxy_ip}:${proxy_port}`;
-
   let browser;
 
   try {
     browser = await puppeteer.launch({
       headless: true,
       args: [
-        `--proxy-server=${proxy_ip}:${proxy_port}`, // Sadece IP ve Port!
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-gpu',
@@ -80,19 +67,13 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
 
     const page = await browser.newPage();
 
-    // 🛡️ Ekstra sahtecilik burada
+    // Sahtecilik önlemleri (kalsın)
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(navigator, 'webdriver', { get: () => false });
-
-      window.navigator.chrome = {
-        runtime: {},
-      };
-
+      window.navigator.chrome = { runtime: {} };
       Object.defineProperty(navigator, 'languages', { get: () => ['tr-TR', 'tr'] });
       Object.defineProperty(navigator, 'language', { get: () => 'tr-TR' });
-
       Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
-
       Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 });
       Object.defineProperty(navigator, 'deviceMemory', { get: () => 8 });
 
@@ -117,9 +98,7 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
           ? Promise.resolve({ state: Notification.permission })
           : originalQuery(parameters);
 
-      Object.defineProperty(navigator, 'plugins', {
-        get: () => [1, 2, 3, 4, 5],
-      });
+      Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
 
       navigator.mediaDevices = {
         enumerateDevices: async () => [],
@@ -130,23 +109,7 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
     );
 
-    await page.authenticate({
-      username: proxy_user,
-      password: proxy_pass
-    });
-
-    try {
-      await page.goto(url, { waitUntil: 'networkidle2', timeout: 90000 });
-    } catch (error) {
-      console.error(`Alt Süreç (${urun_kodu}): Sayfa yüklenemedi:`, error.message);
-      process.send({
-        status: 'error',
-        urun_kodu,
-        message: `Sayfa yüklenemedi: ${error.message}`,
-      });
-      return null;
-    }
-
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 90000 });
     await page.waitForSelector('body > ul > li', { timeout: 30000 });
 
     const products = await page.$$eval(
