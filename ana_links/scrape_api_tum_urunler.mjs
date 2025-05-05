@@ -1,7 +1,17 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import { createClient } from '@supabase/supabase-js';
+
+import path from 'path';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+
+import { createClient } from '@supabase/supabase-js'; // For Supabase data insertion (optional)
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Bir üst dizindeki .env dosyasını yükle
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 dotenv.config();
 

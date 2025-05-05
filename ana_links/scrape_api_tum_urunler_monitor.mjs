@@ -2,6 +2,17 @@ import { spawn } from 'child_process';
 import pkg from 'pg';
 import * as fs from 'fs';
 
+import path from 'path';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+
+import { createClient } from '@supabase/supabase-js'; // For Supabase data insertion (optional)
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Bir üst dizindeki .env dosyasını yükle
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const { Client } = pkg;
 

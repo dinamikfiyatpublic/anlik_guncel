@@ -67,7 +67,7 @@ async function fetchLinksUntilEmpty() {
                 SELECT 
                     1 AS parca_no,  -- Örneğin 2. parça
                     (SELECT parca_boyutu FROM parca_araliklari) AS parca_boyutu,
-                    (1 - 1) * (SELECT parca_boyutu FROM parca_araliklari) AS offset_value  
+                    (4 - 1) * (SELECT parca_boyutu FROM parca_araliklari) AS offset_value  
             )
             SELECT DISTINCT
                 d.link, 
