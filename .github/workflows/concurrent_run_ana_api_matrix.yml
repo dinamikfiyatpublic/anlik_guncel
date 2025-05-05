@@ -83,7 +83,6 @@ jobs:
       - name: Run scraper with Xvfb (Türkiye IP üzerinden)
         run: |
           echo "Running scraper: ${{ matrix.script }}"
-          cd tests
           node ana_links/${{ matrix.script }}
           
       - name: Disconnect from Tailscale
