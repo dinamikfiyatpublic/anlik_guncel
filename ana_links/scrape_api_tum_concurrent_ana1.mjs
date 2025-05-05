@@ -147,7 +147,8 @@ async function runAkakceAnaKalanlar(link, kategoriAna, kategoriAlt, kategoriAlt2
   const formattedctcode = `"${ctcode}"`;
 
   return new Promise((resolve, reject) => {
-     const command = `node scrape_api_tum_urunler.mjs ${formattedLink} ${formattedKategoriAna} ${formattedKategoriAlt} ${formattedKategoriAlt2} ${formattedctcode}`;
+     //const command = `node scrape_api_tum_urunler.mjs ${formattedLink} ${formattedKategoriAna} ${formattedKategoriAlt} ${formattedKategoriAlt2} ${formattedctcode}`;
+     const command = `node ${path.resolve(__dirname, 'scrape_api_tum_urunler.mjs')} ${formattedLink} ${formattedKategoriAna} ${formattedKategoriAlt} ${formattedKategoriAlt2} ${formattedctcode}`;
 
     exec(command, (error, stdout, stderr) => {
       if (error) {
