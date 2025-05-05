@@ -70,8 +70,8 @@ async function fetchLinksUntilEmpty() {
                 ),
                 sirala_sinirlar AS (
                 SELECT
-                    CEIL(parca_araliklari.parca_boyutu * 4) + 1 AS baslangic,
-                    CEIL(parca_araliklari.parca_boyutu * 5) AS bitis
+                    CEIL(parca_araliklari.parca_boyutu * 8) + 1 AS baslangic,
+                    CEIL(parca_araliklari.parca_boyutu * 9) AS bitis
                 FROM parca_araliklari
                 )
                 SELECT

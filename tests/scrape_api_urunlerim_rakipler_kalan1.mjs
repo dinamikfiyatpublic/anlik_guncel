@@ -65,7 +65,7 @@ async function fetchLinksUntilEmpty() {
                 parca_araliklari AS (
                     SELECT
                         max_sirala.max_sirala,
-                        (max_sirala.max_sirala / 5.0) AS parca_boyutu
+                        (max_sirala.max_sirala / 10.0) AS parca_boyutu
                     FROM max_sirala
                 ),
                 sirala_sinirlar AS (
