@@ -1,4 +1,4 @@
-name: Scraper_concurent_y
+name: Scraper_ana_concurent_son
 
 on:
   workflow_dispatch:
