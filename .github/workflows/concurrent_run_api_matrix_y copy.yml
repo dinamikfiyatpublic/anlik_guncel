@@ -26,11 +26,11 @@ jobs:
     strategy:
       matrix:
         script: [
-          "scrape_api_urunlerim_rakipler_kalan1.mjs",
-          "scrape_api_urunlerim_rakipler_kalan2.mjs",
-          "scrape_api_urunlerim_rakipler_kalan3.mjs",
-          "scrape_api_urunlerim_rakipler_kalan4.mjs",
-          "scrape_api_urunlerim_rakipler_kalan5.mjs"
+              "scrape_api_tum_concurrent_ana1.mjs",
+              "scrape_api_tum_concurrent_ana2.mjs",
+              "scrape_api_tum_concurrent_ana3.mjs",
+              "scrape_api_tum_concurrent_ana4.mjs",
+              "scrape_api_tum_concurrent_ana5.mjs"
         ]
 
     steps:
@@ -84,8 +84,8 @@ jobs:
         run: |
           echo "Running scraper: ${{ matrix.script }}"
           cd tests
-          node ${{ matrix.script }}
-
+          node ana_links/${{ matrix.script }}
+          
       - name: Disconnect from Tailscale
         if: always()
         run: |
