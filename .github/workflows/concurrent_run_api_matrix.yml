@@ -30,7 +30,7 @@ jobs:
 
     strategy:
       matrix:
-        script: [
+        script: [ 
           "scrape_api_urunlerim_rakipler_kalan1.mjs",
           "scrape_api_urunlerim_rakipler_kalan2.mjs",
           "scrape_api_urunlerim_rakipler_kalan3.mjs",
@@ -40,17 +40,16 @@ jobs:
           "scrape_api_urunlerim_rakipler_kalan7.mjs",
           "scrape_api_urunlerim_rakipler_kalan8.mjs",
           "scrape_api_urunlerim_rakipler_kalan9.mjs",
-          "scrape_api_urunlerim_rakipler_kalan10.mjs"
-        ]
+          "scrape_api_urunlerim_rakipler_kalan10.mjs" ]
 
     steps:
       - name: Check if user is authorized
         if: github.actor != github.repository_owner
         run: |
-          echo "❌ Unauthorized user: ${{ github.actor }}. Only the repository owner can run this workflow."
+          echo "❌ Unauthorized user: ${{ github.actor }}"
           exit 1
 
-      - name: Check out the code
+      - name: Check out code
         uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -68,29 +67,54 @@ jobs:
           chrome-version: stable
 
       - name: Install xvfb
-        run: sudo apt-get update && sudo apt-get install -y xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb jq
 
       - name: Install Tailscale
         run: |
-          echo "Installing Tailscale"
           curl -fsSL https://tailscale.com/install.sh | sh
 
-      - name: Start tailscaled
+      - name: Ensure tailscaled is not already running
         run: |
-          echo "Starting tailscaled"
-          sudo tailscaled & sleep 5
+          if pgrep tailscaled; then
+              echo "tailscaled already running. Skipping start."
+            else
+              echo "Starting tailscaled..."
+              sudo tailscaled &
+              sleep 5
+            fi
 
-      - name: Connect to Tailscale with Auth Key
+      - name: Connect to Tailscale with Auth Key and Exit Node
         run: |
-          echo "Connecting to Tailscale"
-          sudo tailscale up --authkey=${{ secrets.TS_AUTH_KEY }} \
-                            --exit-node=100.77.251.95 \
-                            --accept-routes \
-                            --accept-dns
-          echo "Tailscale connected."
+          sudo tailscale up \
+            --authkey=${{ secrets.TS_AUTH_KEY }} \
+            --exit-node=100.77.251.95 \
+            --exit-node-allow-lan-access \
+            --accept-routes \
+            --accept-dns
+
+          echo "✅ Tailscale IP (internal):"
           tailscale ip -4
 
-      - name: Run scraper with Xvfb (Türkiye IP üzerinden)
+      - name: Check Tailscale status
+        run: |
+          tailscale status
+
+      - name: Wait for Tailscale connection
+        run: |
+          sleep 10  
+
+      - name: Show external IP and location info
+        run: |
+          echo "🔍 Getting external IP..."
+          IP=$(curl -s https://ifconfig.me || curl -s https://api.ipify.org)
+          echo "🌐 External IP: $IP"
+
+          echo "🌍 Getting geolocation info..."
+          GEO=$(curl -s https://ipapi.co/$IP/json/)
+          echo "📍 Location:"
+          echo "$GEO" | jq '.ip, .city, .region, .country_name, .org'
+
+      - name: Run scraper through Türkiye IP
         run: |
           echo "Running scraper: ${{ matrix.script }}"
           cd tests
@@ -99,5 +123,4 @@ jobs:
       - name: Disconnect from Tailscale
         if: always()
         run: |
-          echo "Disconnecting from Tailscale"
           sudo tailscale logout

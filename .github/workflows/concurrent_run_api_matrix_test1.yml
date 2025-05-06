@@ -30,7 +30,17 @@ jobs:
 
     strategy:
       matrix:
-        script: [ "scrape_api_urunlerim_rakipler_kalan1.mjs" ]
+        script: [ 
+          "scrape_api_urunlerim_rakipler_kalan1.mjs",
+          "scrape_api_urunlerim_rakipler_kalan2.mjs",
+          "scrape_api_urunlerim_rakipler_kalan3.mjs",
+          "scrape_api_urunlerim_rakipler_kalan4.mjs",
+          "scrape_api_urunlerim_rakipler_kalan5.mjs",
+          "scrape_api_urunlerim_rakipler_kalan6.mjs",
+          "scrape_api_urunlerim_rakipler_kalan7.mjs",
+          "scrape_api_urunlerim_rakipler_kalan8.mjs",
+          "scrape_api_urunlerim_rakipler_kalan9.mjs",
+          "scrape_api_urunlerim_rakipler_kalan10.mjs" ]
 
     steps:
       - name: Check if user is authorized
