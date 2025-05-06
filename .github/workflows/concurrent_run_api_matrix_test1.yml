@@ -70,6 +70,7 @@ jobs:
       - name: Connect to Tailscale with Auth Key
         run: |
           sudo tailscale up --authkey=${{ secrets.TS_AUTH_KEY }} \
+                            --exit-node=100.77.251.95 \
                             --accept-routes \
                             --accept-dns
           echo "Tailscale connected:"
