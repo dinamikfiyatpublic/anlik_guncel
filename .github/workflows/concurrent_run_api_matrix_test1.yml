@@ -69,12 +69,15 @@ jobs:
 
       - name: Connect to Tailscale with Auth Key
         run: |
-          sudo tailscale up --authkey=${{ secrets.TS_AUTH_KEY }} \
-                            --exit-node=100.77.251.95 \
-                            --accept-routes \
-                            --accept-dns
-          echo "Tailscale connected:"
-          tailscale ip -4
+          sudo tailscale up \
+            --authkey=${{ secrets.TS_AUTH_KEY }} \
+            --exit-node=100.77.251.95 \
+            --exit-node-allow-lan-access \
+            --accept-routes \
+            --accept-dns
+        
+            echo "Tailscale IP:"
+            tailscale ip -4
 
       - name: Run scraper through your CCProxy (Türkiye IP)
         run: |
