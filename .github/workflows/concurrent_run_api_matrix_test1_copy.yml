@@ -14,8 +14,8 @@ jobs:
       PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
       PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}
       PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}
-      PROXY_IP: ${{ secrets.PROXY_IP }}
-      PROXY_PORT: ${{ secrets.PROXY_PORT }}
+      PROXY_IP: ${{ secrets.PROXY_IP }}           # örn: 100.85.36.57 (senin PC'nin Tailscale IP'si)
+      PROXY_PORT: ${{ secrets.PROXY_PORT }}       # örn: 3128
       PROXY_USER: ${{ secrets.PROXY_USER }}
       PROXY_PASS: ${{ secrets.PROXY_PASS }}
       PG_SCRPEANT: ${{ secrets.PG_SCRPEANT }}
@@ -57,7 +57,7 @@ jobs:
           chrome-version: stable
 
       - name: Install xvfb
-        run: sudo apt-get update && sudo apt-get install -y xvfb jq
+        run: sudo apt-get update && sudo apt-get install -y xvfb
 
       - name: Install Tailscale
         run: |
@@ -65,10 +65,9 @@ jobs:
 
       - name: Start tailscaled
         run: |
-          sudo tailscaled &
-          sleep 5
+          sudo tailscaled & sleep 5
 
-      - name: Connect to Tailscale with Auth Key and Exit Node
+      - name: Connect to Tailscale with Auth Key
         run: |
           sudo tailscale up \
             --authkey=${{ secrets.TS_AUTH_KEY }} \
@@ -76,26 +75,17 @@ jobs:
             --exit-node-allow-lan-access \
             --accept-routes \
             --accept-dns
+        
+            echo "Tailscale IP:"
+            tailscale ip -4
 
-          echo "✅ Tailscale IP (internal):"
-          tailscale ip -4
-
-      - name: Show external IP and location info
+      - name: Run scraper through your CCProxy (Türkiye IP)
         run: |
-          echo "🔍 Getting external IP..."
-          IP=$(curl -s https://ifconfig.me || curl -s https://api.ipify.org)
-          echo "🌐 External IP: $IP"
-
-          echo "🌍 Getting geolocation info..."
-          GEO=$(curl -s https://ipapi.co/$IP/json/)
-          echo "📍 Location:"
-          echo "$GEO" | jq '.ip, .city, .region, .country_name, .org'
-
-      - name: Run scraper through Türkiye IP
-        run: |
-          echo "Running scraper: ${{ matrix.script }}"
+          export http_proxy="http://${{ secrets.PROXY_USER }}:${{ secrets.PROXY_PASS }}@${{ secrets.PROXY_IP }}:${{ secrets.PROXY_PORT }}"
+          export https_proxy="$http_proxy"
+          echo "Proxy set: $http_proxy"
           cd tests
-          node ${{ matrix.script }}
+          xvfb-run -a node ${{ matrix.script }}
 
       - name: Disconnect from Tailscale
         if: always()
