@@ -19,6 +19,7 @@ db_password = os.getenv('PG_PASSWORD')
 db_host = os.getenv('PG_HOST')
 db_port = os.getenv('PG_PORT')
 db_name = os.getenv('PG_NAME')
+viewName = os.getenv('PG_VIEW_NAME')
 
 # Parolayı güvenli şekilde şifrele
 encoded_password = quote_plus(db_password)
@@ -32,7 +33,9 @@ def check_supabase():
         with psycopg2.connect(connection_string) as conn:
             with conn.cursor() as cur:
                 logging.info('Veritabanına bağlanıldı.')
-                cur.execute("SELECT COUNT(*) FROM dinamik_akakce_kategoriler_ana_linkler_kalan_yeni;")
+                cur.execute(f"""SELECT COUNT(*) as count
+                    FROM {viewName}
+                    WHERE checker = true""")
                 result = cur.fetchone()
                 scrape_kalan = result[0] if result else 0
                 logging.info(f"kalan adet: {scrape_kalan}")
