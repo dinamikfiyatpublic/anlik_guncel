@@ -80,6 +80,14 @@ jobs:
           echo "✅ Tailscale IP (internal):"
           tailscale ip -4
 
+      - name: Check Tailscale status
+        run: |
+          tailscale status
+
+      - name: Wait for Tailscale connection
+        run: |
+          sleep 10  
+
       - name: Show external IP and location info
         run: |
           echo "🔍 Getting external IP..."
