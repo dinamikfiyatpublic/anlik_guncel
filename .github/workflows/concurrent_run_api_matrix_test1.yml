@@ -14,8 +14,8 @@ jobs:
       PG_PROXYPORT: ${{ secrets.PG_PROXYPORT }}
       PG_PROXYUSERNAME: ${{ secrets.PG_PROXYUSERNAME }}
       PG_PROXYPASSWORD: ${{ secrets.PG_PROXYPASSWORD }}
-      PROXY_IP: ${{ secrets.PROXY_IP }}
-      PROXY_PORT: ${{ secrets.PROXY_PORT }}
+      PROXY_IP: ${{ secrets.PROXY_IP }}           # örn: 100.85.36.57 (senin PC'nin Tailscale IP'si)
+      PROXY_PORT: ${{ secrets.PROXY_PORT }}       # örn: 3128
       PROXY_USER: ${{ secrets.PROXY_USER }}
       PROXY_PASS: ${{ secrets.PROXY_PASS }}
       PG_SCRPEANT: ${{ secrets.PG_SCRPEANT }}
@@ -30,18 +30,16 @@ jobs:
 
     strategy:
       matrix:
-        script: [
-          "scrape_api_urunlerim_rakipler_kalan1.mjs"
-        ]
+        script: [ "scrape_api_urunlerim_rakipler_kalan1.mjs" ]
 
     steps:
       - name: Check if user is authorized
         if: github.actor != github.repository_owner
         run: |
-          echo "❌ Unauthorized user: ${{ github.actor }}. Only the repository owner can run this workflow."
+          echo "❌ Unauthorized user: ${{ github.actor }}"
           exit 1
 
-      - name: Check out the code
+      - name: Check out code
         uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -63,36 +61,29 @@ jobs:
 
       - name: Install Tailscale
         run: |
-          echo "Installing Tailscale"
           curl -fsSL https://tailscale.com/install.sh | sh
 
       - name: Start tailscaled
         run: |
-          echo "Starting tailscaled"
           sudo tailscaled & sleep 5
 
-      - name: Connect to Tailscale WITHOUT exit-node
+      - name: Connect to Tailscale with Auth Key
         run: |
-          echo "Connecting to Tailscale (no exit-node)"
           sudo tailscale up --authkey=${{ secrets.TS_AUTH_KEY }} \
                             --accept-routes \
                             --accept-dns
-          echo "Tailscale connected."
+          echo "Tailscale connected:"
           tailscale ip -4
 
-      - name: Test Supabase Access
+      - name: Run scraper through your CCProxy (Türkiye IP)
         run: |
-          echo "Testing Supabase access..."
-          curl -I https://${{ secrets.PG_SUPABASEURL }} || echo "❌ Supabase erişimi başarısız"
-
-      - name: Run scraper with Xvfb (Türkiye IP üzerinden)
-        run: |
-          echo "Running scraper: ${{ matrix.script }}"
+          export http_proxy="http://${{ secrets.PROXY_USER }}:${{ secrets.PROXY_PASS }}@${{ secrets.PROXY_IP }}:${{ secrets.PROXY_PORT }}"
+          export https_proxy="$http_proxy"
+          echo "Proxy set: $http_proxy"
           cd tests
-          node ${{ matrix.script }}
+          xvfb-run -a node ${{ matrix.script }}
 
       - name: Disconnect from Tailscale
         if: always()
         run: |
-          echo "Disconnecting from Tailscale"
           sudo tailscale logout
