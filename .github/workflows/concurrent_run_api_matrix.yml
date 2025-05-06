@@ -103,16 +103,19 @@ jobs:
         run: |
           sleep 10  
 
-      - name: Show external IP and location info
+      - name: 🔍 Check External IP & Geolocation
         run: |
           echo "🔍 Getting external IP..."
-          IP=$(curl -s https://ifconfig.me || curl -s https://api.ipify.org)
-          echo "🌐 External IP: $IP"
-
-          echo "🌍 Getting geolocation info..."
-          GEO=$(curl -s https://ipapi.co/$IP/json/)
-          echo "📍 Location:"
-          echo "$GEO" | jq '.ip, .city, .region, .country_name, .org'
+          EXTERNAL_IP=$(curl -s https://ifconfig.me)
+          echo "🌐 External IP: $EXTERNAL_IP"
+        
+          if [ -n "$EXTERNAL_IP" ]; then
+            echo "🌍 Getting geolocation info..."
+            GEO=$(curl -s https://ipinfo.io/$EXTERNAL_IP/json || echo "")
+            echo "$GEO" | jq '.city, .region, .country'
+          else
+            echo "❌ Could not retrieve external IP."
+            fi        
 
       - name: Run scraper through Türkiye IP
         run: |
