@@ -33,7 +33,8 @@ const rawPassword = process.env.PG_PASSWORD;
 const encodedPassword = encodeURIComponent(rawPassword);
 const base = process.env.PG_CONNECTION_STRING_BASE;
 
-const connectionString = base.replace('@', `${encodedPassword}@`);
+//const connectionString = base.replace('@', `${encodedPassword}@`);
+const connectionString = `postgresql://postgres.vuoxqclhziyumhrhbsqo:${encodedPassword}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`;
 
 const viewName = process.env.PG_VIEW_NAME;
 
