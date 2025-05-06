@@ -63,10 +63,15 @@ jobs:
         run: |
           curl -fsSL https://tailscale.com/install.sh | sh
 
-      - name: Start tailscaled
+      - name: Ensure tailscaled is not already running
         run: |
-          sudo tailscaled &
-          sleep 5
+          if pgrep tailscaled; then
+              echo "tailscaled already running. Skipping start."
+            else
+              echo "Starting tailscaled..."
+              sudo tailscaled &
+              sleep 5
+            fi
 
       - name: Connect to Tailscale with Auth Key and Exit Node
         run: |
