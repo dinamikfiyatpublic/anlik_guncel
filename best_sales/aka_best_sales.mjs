@@ -122,7 +122,9 @@ async function scrapePage(page, timestamp) {
 
 
 (async () => {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({  
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']});
     const page = await browser.newPage();
 
     const timestamp = await getTimestamp();
