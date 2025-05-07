@@ -1,7 +1,10 @@
 import { spawn } from 'child_process';
 import path from 'path';
-import pkg from 'pg';
 const { Pool } = pkg;
+
+import { exec } from 'child_process';
+import pkg from 'pg';
+import pLimit from 'p-limit'; // Paralel görev sınırı için
 
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
@@ -27,120 +30,94 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const scrpant= process.env.PG_SCRPEANT; 
 
 // Fetch links from the database
-const pool = new Pool({
-  connectionString: `postgresql://postgres.vuoxqclhziyumhrhbsqo:${encodedPassword}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`
-});
+const limit = pLimit(1); // Maksimum paralel görev sayısını 20 olarak ayarla
 
-// Fetch links from the database using the pool
-const fetchLinks = async () => {
-  const client = await pool.connect(); // Get a client from the pool
+async function fetchLinksUntilEmpty() {
+  const client = new Client({ connectionString });
 
   try {
-    // Fetch data from the view
-    const query = `
-      SELECT link, kategori_ana
+    await client.connect();
+    console.log('Connected to the database.');
+
+    await updateProcessStatus(false);
+
+    while (true) {
+      const res = await client.query(`
+      SELECT link, kategori_ana,ctcode
       FROM dina_f_akakce_ana_best_sales_eksik_Scraplar_view
       WHERE siralama > 0
-      AND siralama <= 10000 and checker = True;
-    `;
-    
-    const { rows } = await client.query(query); // Execute the query
-    console.log('Data fetched successfully:', rows.length);
+      AND siralama <= 10000 and checker = True
+      limit 1;
+      `);
 
-    return rows; // Return the rows if data is found
-  } catch (error) {
-    console.error("Error fetching links:", error);
-    process.exit(1); // Exit with error code if something goes wrong
-  } finally {
-    client.release(); // Release the client back to the pool
-  }
-};
-
-// Process each link independently by running the scraping script in separate processes
-const processLink = (formattedItem) => {
-  return new Promise((resolve, reject) => {
-    const { link, kategori_ana } = formattedItem;
-
-    const args = [
-      'node',
-      'aka_best_sales.mjs',
-      link,
-      `"${kategori_ana}"`
-    ];
-
-    console.log('Executing:', args.join(' '));
-
-    const childProcess = spawn(args[0], args.slice(1), {
-      shell: true,
-      cwd: __dirname,
-      env: { ...process.env } // Pass environment variables
-    });
-
-    let output = '';
-    let error = '';
-
-    childProcess.stdout.on('data', (data) => {
-      output += data.toString();
-    });
-
-    childProcess.stderr.on('data', (data) => {
-      error += data.toString();
-    });
-
-    childProcess.on('close', (code) => {
-      if (code === 0) {
-        console.log(`Command succeeded: ${output}`);
-        resolve(output);
-      } else {
-        console.error(`Command failed with code ${code}: ${error}`);
-        reject(new Error(`Process exited with code ${code}: ${error}`));
+      if (res.rows.length === 0) {
+        console.log('No more data to fetch. Process completed.');
+        await updateProcessStatus(true);
+        break;
       }
-    });
 
-    childProcess.on('error', (err) => {
-      console.error(`Process error: ${err.message}`);
-      reject(err);
+      console.log(`Fetched ${res.rows.length} rows. Running concurrent tasks...`);
+
+      // Her satır için paralel işlem başlat
+      const tasks = res.rows.map(row =>
+        limit(() =>
+          runAkakceAnaKalanlar(row.link, row.kategori_ana,row.ctcode)
+        )
+      );
+
+      try {
+        await Promise.all(tasks); // Tüm görevler tamamlanana kadar bekle
+      } catch (err) {
+        console.error('Error running concurrent tasks:', err);
+        await updateProcessStatus(true);
+        break;
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching links:', err);
+    await updateProcessStatus(true);
+    throw err;
+  } finally {
+    await client.end();
+    console.log('Disconnected from the database.');
+  }
+}
+
+async function runAkakceAnaKalanlar(link, kategoriAna,ctcode) {
+  console.log(`Processing link: ${link}`);
+  console.log(`Kategori Ana: ${kategoriAna}`);
+  console.log(`ctcode: ${ctcode}`);
+
+  // Format the arguments by adding quotes
+  const formattedLink = `"${link}"`;
+  const formattedKategoriAna = `"${kategoriAna}"`;
+  const formattedctcode = `"${ctcode}"`;
+  
+
+  return new Promise((resolve, reject) => {
+     const command = `node aka_best_sales.mjs ${formattedLink} ${formattedKategoriAna} ${formattedctcode}`;
+
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error executing aka_best_sales.mjs for link ${link}: ${error.message}`);
+        reject(error);
+        return;
+      }
+      if (stderr) {
+        console.error(`Stderr for link ${link}: ${stderr}`);
+      }
+      console.log(`Stdout for link ${link}: ${stdout}`);
+      resolve(stdout);
     });
   });
-};
+}
 
-// Function to process links in batches
-const processLinksInBatches = async (rows, batchSize = 10) => {
-  try {
-    for (let i = 0; i < rows.length; i += batchSize) {
-      const batch = rows.slice(i, i + batchSize); // Get a chunk of links
-      console.log(`Processing batch ${Math.floor(i / batchSize) + 1}...`);
 
-      // Process the batch concurrently
-      const promises = batch.map((row) => processLink(row)); // Pass the entire row to processLink
-      const results = await Promise.all(promises); // Wait for all processes in this batch to finish
+async function updateProcessStatus(status) {
+  console.log(`Updating process status to: ${status}`);
+  // Burada veritabanında durum güncelleme işlemi yapılabilir
+}
 
-      // Log results for this batch
-      results.forEach((result, index) => {
-        console.log(`Processed link ${batch[index].link}:`, result);
-      });
-
-      console.log(`Batch ${Math.floor(i / batchSize) + 1} processed successfully.`);
-    }
-
-    console.log("Batch processing completed.");
-  } catch (error) {
-    console.error("Error processing links:", error);
-  }
-};
-
-// Process all links by fetching the latest batch, processing it, and repeating if data exists
-const processAllLinks = async () => {
-  let rows = await fetchLinks(); // Initial fetch
-  while (rows.length > 0) {
-    await processLinksInBatches(rows, 10); // Process in batches of 10
-    rows = await fetchLinks(); // Fetch new data after batch processing
-    if (rows.length === 0) {
-      console.log("No more data to process, finishing.");
-      process.exit(0); // Stop further processing if no rows are found
-    }
-  }
-};
-
-// Initiate processing
-processAllLinks();
+fetchLinksUntilEmpty().catch(err => {
+  console.error('Fatal error:', err);
+});

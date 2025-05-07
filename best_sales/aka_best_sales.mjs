@@ -47,7 +47,6 @@ async function getTimestamp() {
     
     return data.length > 0 ? data[0].hizli_timestamp : null;
 }
-
 async function saveToSupabase(scrapedData) {
     if (!scrapedData || scrapedData.length === 0) {
         console.log('No data to insert.');
@@ -57,7 +56,7 @@ async function saveToSupabase(scrapedData) {
     const { error } = await supabase
         .from('dinamik_akakce_kategoriler_coksatan_detay')
         .insert(scrapedData);
-    
+
     if (error) {
         console.error('Error inserting data to Supabase:', error);
     } else {
@@ -65,71 +64,81 @@ async function saveToSupabase(scrapedData) {
     }
 }
 
+async function updateCheckerFalse() {
+    const { error } = await supabase
+        .from('dinamik_akakce_kategoriler_coksatan')
+        .update({ checker: false })
+        .eq('link', link);
+
+    if (error) {
+        console.error('Error updating checker to false:', error);
+    } else {
+        console.log(`Checker set to false for link: ${link}`);
+    }
+}
+
 async function scrapePage(page, timestamp) {
-    const url = `https://api.scrapingant.com/v2/general?url=https://api6.akakce.com/dl/dlquery/?PrSetId=85085&CtCode=${ctcode}&Sort=1&Page=1&x-api-key=${scrpant}&browser=false`; 
+    const url = `https://api6.akakce.com/dl/dlquery/?PrSetId=85085&CtCode=${ctcode}&Sort=1&Page=1&`;
+
     try {
         await page.goto(url, { waitUntil: 'networkidle2' });
 
-        // Yanıtı kontrol edelim ve yazdıralım
         const pageContent = await page.evaluate(() => document.body.innerText);
-        //console.log('API Response:', pageContent); // JSON yanıtını konsola yazdırıyoruz.
 
         let jsonData;
         try {
-            jsonData = JSON.parse(pageContent); // Yanıtı JSON'a dönüştür
+            jsonData = JSON.parse(pageContent);
         } catch (parseError) {
             console.error('Error parsing JSON:', parseError);
             return null;
         }
 
-        if (!jsonData || !jsonData.result || !jsonData.result.productList || !jsonData.result.productList.products) {
-            console.error('Invalid response structure:', jsonData);
+        if (
+            !jsonData ||
+            !jsonData.result ||
+            jsonData.result.countOfProducts === 0 ||
+            !jsonData.result.productList ||
+            !jsonData.result.productList.products
+        ) {
+            console.error('Invalid or empty product response:', jsonData);
             return null;
         }
 
-        const scrapedData = jsonData.result.productList.products.map((item, index) => {
-            ///const urlParams = new URLSearchParams(item.url.split('?')[1]);
-            ///const urunKodu = urlParams.get('p');
-
-            return {
-                sira: index + 1,
-                link: link,  // Use the command line argument
-                p_fiyat: item.price,
-                marka: item.mkName,
-                p_adi: item.name,
-                timestamp: timestamp,
-                ana_kat: kategori_ana,  // Use the command line argument
-                ///alt_kat1: kategori_alt,  // Use the command line argument
-                ///alt_kat2: kategori_alt2,  // Use the command line argument
-                ctcode: ctcode,  // Use the command line argument
-                urun_kodu: item.code
-            };
-        });
+        const scrapedData = jsonData.result.productList.products.map((item, index) => ({
+            sira: index + 1,
+            link: link,
+            p_fiyat: item.price,
+            marka: item.mkName,
+            p_adi: item.name,
+            timestamp: timestamp,
+            ana_kat: kategori_ana,
+            ctcode: ctcode,
+            urun_kodu: item.code
+        }));
 
         console.log(`Scraped data from ${url}:`, scrapedData);
         await saveToSupabase(scrapedData);
         return scrapedData;
     } catch (error) {
         console.error(`Error scraping ${url}:`, error);
-
-        // Ekran görüntüsünü al
-        //await page.screenshot({ path: 'screenshot_error.png' });
-        //console.log('Screenshot saved as screenshot_error.png');
-
         return null;
     }
 }
 
-
 (async () => {
-    const browser = await puppeteer.launch({  
+    const browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']});
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
     const page = await browser.newPage();
 
     const timestamp = await getTimestamp();
     if (timestamp) {
-        await scrapePage(page, timestamp);
+        const result = await scrapePage(page, timestamp);
+
+        if (!result) {
+            await updateCheckerFalse();
+        }
     }
 
     await browser.close();
