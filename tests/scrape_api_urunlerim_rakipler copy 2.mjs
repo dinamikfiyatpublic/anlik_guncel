@@ -110,38 +110,8 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
     );
 
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 90000 });
+    await page.waitForSelector('body > ul > li', { timeout: 30000 });
 
-    // Sayfanın tamamen yüklenmesini bekle
-    const selectorExists = await page.$('body > ul > li');
-    
-    if (!selectorExists) {
-      console.warn(`Alt Süreç (${urun_kodu}): Sayfada ürün bulunamadı, checker false yapılacak.`);
-      
-      // Sayfa boşsa checker alanını false yap
-      const { error: updateError } = await supabase
-        .from(`${viewName}`)
-        .update({ checker: false })
-        .eq('urun_kodu', String(urun_kodu));
-
-      if (updateError) {
-        console.error(`Alt Süreç (${urun_kodu}): Supabase checker güncelleme hatası:`, updateError);
-        process.send({
-          status: 'error',
-          urun_kodu,
-          message: `Kazıma hatası: ${updateError.message}`
-        });
-      } else {
-        process.send({
-          status: 'completed',
-          urun_kodu,
-          message: `Sayfa boş olduğu için checker false yapıldı.`
-        });
-      }
-
-      return;
-    }
-
-    // Sayfada ürün varsa devam et
     const products = await page.$$eval(
       'body > ul > li',
       (items, additionalData) => {
