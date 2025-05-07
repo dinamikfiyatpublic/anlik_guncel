@@ -95,7 +95,7 @@ async function runAkakceAnaKalanlar(link, kategoriAna,ctcode) {
   
 
   return new Promise((resolve, reject) => {
-     const command = `node aka_best_sales.mjs ${formattedLink} ${formattedKategoriAna} ${formattedctcode}`;
+     const command = `node best_sales/aka_best_sales.mjs ${formattedLink} ${formattedKategoriAna} ${formattedctcode}`;
 
     exec(command, (error, stdout, stderr) => {
       if (error) {
