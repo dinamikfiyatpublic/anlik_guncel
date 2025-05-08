@@ -91,7 +91,7 @@ async function scrapePage(page, timestamp) {
 
             return {
                 sira: index + 1,
-                link: link,  // Use the command line argument
+                link: item.url ? "https://www.akakce.com" + item.url : link,
                 p_fiyat: item.price,
                 marka: item.mkName,
                 p_adi: item.name,
