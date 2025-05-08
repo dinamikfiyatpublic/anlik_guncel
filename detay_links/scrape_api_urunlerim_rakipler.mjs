@@ -149,7 +149,9 @@ const scrapeAkakce = async (urun_kodu, additionalData) => {
 
         return filtered.map((item, idx) => {
           const fiyatRaw = item.querySelector('span.pb_v8 > span')?.innerText.trim();
-          const formattedFiyat = fiyatRaw ? parseFloat(fiyatRaw.match(/[\d,.]+/)[0].replace(',', '.')) : null;
+          ///const formattedFiyat = fiyatRaw ? parseFloat(fiyatRaw.match(/[\d,.]+/)[0].replace(',', '.')) : null;
+          const formattedFiyat = fiyatRaw ? parseFloat(fiyatRaw.replace('.', '').replace(',', '.')) : null;
+
           if (!formattedFiyat) return null;
 
           const kargo = item.querySelector('span.pb_v8 > em')?.innerText.trim() || null;
